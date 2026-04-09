@@ -10,6 +10,7 @@ import { msalConfig } from './auth/authConfig';
  * For more, visit: https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-react/docs/getting-started.md
  */
 const msalInstance = new PublicClientApplication(msalConfig);
+console.log("MSAL instance created:", msalConfig);
 
 // Default to using the first account if no account is active on page load
 if (!msalInstance.getActiveAccount() && msalInstance.getAllAccounts().length > 0) {
