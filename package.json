@@ -7,6 +7,7 @@
     "dev": "vite",
     "build:dev": "vite build --mode development",
     "build:prod": "vite build --mode production",
+    "build:azure": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
