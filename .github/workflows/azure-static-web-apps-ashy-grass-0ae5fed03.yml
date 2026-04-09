@@ -31,12 +31,8 @@ jobs:
           app_location: "/" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "dist" # Built app content directory - optional
-          env_variables: |
-            VITE_AUTH_CLIENT_ID=${{ secrets.AUTH_CLIENT_ID }}
-            VITE_AUTH_TENANT_ID=${{ secrets.AUTH_TENANT_ID }}
-            VITE_AUTHORITY_URI=${{ secrets.VITE_AUTHORITY_URI }}
-            VITE_AUTH_REDIRECT_URI=${{ secrets.AUTH_REDIRECT_URI }}
-            VITE_API_BASE_URL=${{ secrets.API_BASE_URL }}
+          app_build_command: "npm run build"
+          
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
