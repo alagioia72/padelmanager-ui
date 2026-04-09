@@ -13,9 +13,9 @@ import { LogLevel } from '@azure/msal-browser';
 
 export const msalConfig = {
     auth: {
-        clientId: '4db9fde7-3ad1-42b3-8e8a-c83d4e362a41', // This is the ONLY mandatory field that you need to supply.
-        authority: 'https://padelmanagerb2c.ciamlogin.com/', // Replace the placeholder with your tenant subdomain 
-        redirectUri: 'http://localhost:5173/redirect', // Points to window.location.origin. You must register this URI on Microsoft Entra admin center/App Registration.
+        clientId: import.meta.env.VITE_AUTH_CLIENT_ID, // This is the ONLY mandatory field that you need to supply.
+        authority: import.meta.env.VITE_AUTHORITY_URI, // Replace the placeholder with your tenant subdomain 
+        redirectUri: import.meta.env.VITE_AUTH_REDIRECT_URI, // Points to window.location.origin. You must register this URI on Microsoft Entra admin center/App Registration.
         postLogoutRedirectUri: '/', // Indicates the page to navigate after logout.
         navigateToLoginRequestUrl: false, // If "true", will navigate back to the original request location before processing the auth code response.
     },
@@ -57,7 +57,7 @@ export const msalConfig = {
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
  */
 export const loginRequest = {
-    scopes: [],
+    scopes: [import.meta.env.VITE_AUTH_SCOPE],
 };
 
 /**
