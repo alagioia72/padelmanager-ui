@@ -38,6 +38,7 @@ jobs:
           VITE_AUTH_CLIENT_ID: ${{ secrets.VITE_AUTH_CLIENT_ID }}
           VITE_AUTH_REDIRECT_URI: ${{ secrets.VITE_AUTH_REDIRECT_URI }}
           VITE_AUTH_TENANT_ID: ${{ secrets.VITE_AUTH_TENANT_ID }}
+          VITE_AUTH_SCOPES: ${{ secrets.VITE_AUTH_SCOPES }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
