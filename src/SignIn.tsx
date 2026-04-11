@@ -1,21 +1,41 @@
-import { MsalProvider, AuthenticatedTemplate, useMsal, UnauthenticatedTemplate } from '@azure/msal-react';
+import { useMsal } from '@azure/msal-react';
 import { loginRequest } from './auth/authConfig';
 
-export default function SignIn() {
-  const { instance } = useMsal();
-  const activeAccount = instance.getActiveAccount();
+interface SignInProps {
+  onSwitchToSignUp: () => void;
+}
 
+export default function SignIn({ onSwitchToSignUp }: SignInProps) {
+  const { instance } = useMsal();
 
   function handleSignIn() {
-      console.log("Sign IN button clicked");
-
-      instance.loginRedirect(loginRequest).catch((error) => console.log(error));
+    instance.loginRedirect(loginRequest).catch(console.error);
   }
 
-
   return (
-    <button onClick={handleSignIn} className="bg-blue-500 text-white px-4 py-2 rounded">
-        SignIn
-    </button>
-  )
+    <div className="auth-form-wrap">
+      <h2>Bentornato!</h2>
+      <p className="subtitle">
+        Accedi al tuo account per gestire le tue partite, tornei e molto altro.
+      </p>
+
+      <div className="auth-toggle">
+        <button className="auth-toggle-btn active">Accedi</button>
+        <button className="auth-toggle-btn" onClick={onSwitchToSignUp}>Registrati</button>
+      </div>
+
+      <div className="auth-actions">
+        <button className="auth-btn auth-btn-primary" onClick={handleSignIn}>
+          🔑 Accedi con Microsoft
+        </button>
+      </div>
+
+      <p className="auth-note">
+        Non hai ancora un account?{' '}
+        <a href="#" onClick={(e) => { e.preventDefault(); onSwitchToSignUp(); }}>
+          Registrati gratis
+        </a>
+      </p>
+    </div>
+  );
 }

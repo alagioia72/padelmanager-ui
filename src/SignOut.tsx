@@ -1,21 +1,15 @@
-import { MsalProvider, AuthenticatedTemplate, useMsal, UnauthenticatedTemplate } from '@azure/msal-react';
-import { loginRequest } from './auth/authConfig';
+import { useMsal } from '@azure/msal-react';
 
 export default function SignOut() {
   const { instance } = useMsal();
-  const activeAccount = instance.getActiveAccount();
-
 
   function handleSignOut() {
-      console.log("Sign OUT button clicked");
-
-      instance.logoutRedirect().catch((error) => console.log(error));
+    instance.logoutRedirect().catch(console.error);
   }
 
-
   return (
-    <button onClick={handleSignOut} className="bg-blue-500 text-white px-4 py-2 rounded">
-        SignOut
+    <button className="btn-outline-danger" onClick={handleSignOut}>
+      🚪 Esci dall'account
     </button>
-  )
+  );
 }
