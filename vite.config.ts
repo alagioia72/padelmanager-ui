@@ -7,6 +7,11 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
+    server: {
+      host: '0.0.0.0',
+      port: 5000,
+      allowedHosts: true,
+    },
     define: {
       'import.meta.env.VITE_AUTH_CLIENT_ID': JSON.stringify(env.VITE_AUTH_CLIENT_ID),
       'import.meta.env.VITE_AUTH_TENANT_ID': JSON.stringify(env.VITE_AUTH_TENANT_ID),
