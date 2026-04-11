@@ -24,7 +24,7 @@ function AppContent() {
         <UnauthenticatedTemplate>
           <div className="auth-page">
             <div className="auth-left">
-              <div className="auth-left-tag">🏓 Padel Management</div>
+              <div className="auth-left-tag">⭐ Gonetta Platform</div>
               <h1>Il tuo padel,<br />senza limiti.</h1>
               <p>
                 Prenota campi, iscriviti ai tornei, sfida altri giocatori e monitora

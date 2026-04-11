@@ -35,10 +35,7 @@ export default function Navbar({ onProfileClick }: NavbarProps) {
     <>
       <nav className="navbar">
         <a className="navbar-logo" href="#">
-          <div className="navbar-logo-icon">🏓</div>
-          <span className="navbar-logo-text">
-            Padel<span>Manager</span>
-          </span>
+          <img src="/logo.jpg" alt="Gonetta" />
         </a>
 
         {isAuthenticated && (
@@ -82,10 +79,7 @@ export default function Navbar({ onProfileClick }: NavbarProps) {
             <button className="navbar-link" onClick={() => setMenuOpen(false)}>🏆 Tornei</button>
             <button className="navbar-link" onClick={() => setMenuOpen(false)}>📊 Classifiche</button>
             <button className="navbar-link" onClick={() => setMenuOpen(false)}>🎾 Campi</button>
-            <button
-              className="btn-primary"
-              onClick={() => { onProfileClick(); setMenuOpen(false); }}
-            >
+            <button className="btn-primary" onClick={() => { onProfileClick(); setMenuOpen(false); }}>
               👤 Il mio profilo
             </button>
           </>

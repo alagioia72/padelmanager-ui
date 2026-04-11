@@ -5,31 +5,58 @@
 }
 
 :root {
-  --primary: #16a34a;
-  --primary-dark: #15803d;
-  --primary-light: #dcfce7;
-  --accent: #22c55e;
+  --primary: #2d72b8;
+  --primary-dark: #1a4f8a;
+  --primary-light: #dbeffe;
+  --accent: #5aaee0;
+  --accent-light: #93cdf0;
+
   --text: #374151;
   --text-light: #6b7280;
-  --text-heading: #111827;
-  --bg: #f8fafc;
+  --text-heading: #0f2744;
+  --bg: #f4f8fd;
   --bg-card: #ffffff;
-  --border: #e5e7eb;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-  --radius: 12px;
+  --border: #d4e4f5;
+
+  --shadow-sm: 0 1px 3px rgba(45,114,184,0.08);
+  --shadow: 0 4px 12px rgba(45,114,184,0.12);
+  --shadow-lg: 0 10px 30px rgba(45,114,184,0.15);
+
+  --radius: 14px;
   --radius-sm: 8px;
   --navbar-h: 64px;
+
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #5aaee0;
+    --primary-dark: #3d90c8;
+    --primary-light: #0f2744;
+    --accent: #7ec4ec;
+    --accent-light: #a8d8f5;
+
+    --text: #94b8d8;
+    --text-light: #6a90b0;
+    --text-heading: #deedf8;
+    --bg: #0b1929;
+    --bg-card: #0f2240;
+    --border: #1a3560;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
+  }
+}
+
 body {
   min-height: 100dvh;
   background: var(--bg);
+  transition: background 0.3s, color 0.3s;
 }
 
 #root {

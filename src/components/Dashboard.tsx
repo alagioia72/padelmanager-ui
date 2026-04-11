@@ -8,45 +8,45 @@ export default function Dashboard() {
   const cards = [
     {
       icon: '🗓️',
-      color: '#dbeafe',
+      color: 'rgba(45,114,184,0.12)',
       title: 'Le mie partite',
       desc: 'Visualizza e prenota le prossime partite di padel.',
-      badge: 'coming soon',
+      badge: 'soon',
     },
     {
       icon: '🏆',
-      color: '#fef9c3',
+      color: 'rgba(90,174,224,0.15)',
       title: 'Tornei',
       desc: 'Iscriviti ai tornei e segui le tue performance.',
-      badge: 'coming soon',
+      badge: 'soon',
     },
     {
       icon: '📊',
-      color: '#dcfce7',
+      color: 'rgba(26,74,138,0.12)',
       title: 'Classifiche',
       desc: 'Scopri il tuo ranking e quello degli altri giocatori.',
-      badge: 'coming soon',
+      badge: 'soon',
     },
     {
       icon: '🎾',
-      color: '#fce7f3',
+      color: 'rgba(45,114,184,0.1)',
       title: 'Prenotazione Campi',
       desc: 'Prenota un campo per allenarti con i tuoi amici.',
-      badge: 'coming soon',
+      badge: 'soon',
     },
     {
       icon: '👥',
-      color: '#ede9fe',
+      color: 'rgba(90,174,224,0.12)',
       title: 'Trova partner',
       desc: 'Trova giocatori del tuo livello per una partita.',
-      badge: 'coming soon',
+      badge: 'soon',
     },
     {
       icon: '📈',
-      color: '#ffedd5',
+      color: 'rgba(26,74,138,0.1)',
       title: 'Statistiche',
       desc: 'Analizza le tue statistiche e migliora il tuo gioco.',
-      badge: 'coming soon',
+      badge: 'soon',
     },
   ];
 
@@ -54,7 +54,7 @@ export default function Dashboard() {
     <div className="dashboard">
       <div className="dashboard-greeting">
         <h2>Ciao, {firstName}! 👋</h2>
-        <p>Bentornato su PadelManager. Cosa vuoi fare oggi?</p>
+        <p>Bentornato su Gonetta. Cosa vuoi fare oggi?</p>
       </div>
 
       <div className="dashboard-grid">
@@ -65,9 +65,7 @@ export default function Dashboard() {
             </div>
             <h3>{card.title}</h3>
             <p>{card.desc}</p>
-            <span className={card.badge === 'new' ? 'badge-new' : 'badge-soon'}>
-              {card.badge}
-            </span>
+            <span className="badge-soon">coming soon</span>
           </div>
         ))}
       </div>

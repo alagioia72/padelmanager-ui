@@ -55,7 +55,7 @@ export default function PlayerProfile({ onClose }: PlayerProfileProps) {
           </div>
 
           <div className="profile-info-row">
-            <span className="profile-info-icon">🏓</span>
+            <span className="profile-info-icon">🎾</span>
             <div>
               <div className="profile-info-label">Livello</div>
               <div className="profile-info-value">— (coming soon)</div>

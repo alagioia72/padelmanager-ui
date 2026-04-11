@@ -16,30 +16,37 @@ export default function SignUp({ onSwitchToSignIn }: SignUpProps) {
 
   return (
     <div className="auth-form-wrap">
+      <div className="auth-logo-wrap">
+        <img src="/logo.jpg" alt="Gonetta" />
+      </div>
+
       <h2>Crea il tuo account</h2>
       <p className="subtitle">
-        Unisciti alla community di PadelManager e inizia a gestire il tuo gioco.
+        Unisciti alla community di Gonetta e inizia a gestire il tuo gioco di padel.
       </p>
-
-      <div className="auth-toggle">
-        <button className="auth-toggle-btn" onClick={onSwitchToSignIn}>Accedi</button>
-        <button className="auth-toggle-btn active">Registrati</button>
-      </div>
 
       <div className="auth-actions">
         <button className="auth-btn auth-btn-primary" onClick={handleSignUp}>
-          🚀 Registrati con Microsoft
+          <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+            <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+            <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+          </svg>
+          Registrati con Microsoft
         </button>
-        <div className="auth-divider">oppure</div>
+      </div>
+
+      <div className="auth-divider">hai già un account?</div>
+
+      <div className="auth-actions" style={{ marginTop: '12px', marginBottom: 0 }}>
         <button className="auth-btn auth-btn-secondary" onClick={onSwitchToSignIn}>
-          Ho già un account
+          Accedi
         </button>
       </div>
 
       <p className="auth-note">
-        Registrandoti accetti i{' '}
-        <a href="#">Termini di Servizio</a> e la{' '}
-        <a href="#">Privacy Policy</a>.
+        Registrandoti accetti i <a href="#">Termini di Servizio</a> e la <a href="#">Privacy Policy</a> di Gonetta.
       </p>
     </div>
   );
