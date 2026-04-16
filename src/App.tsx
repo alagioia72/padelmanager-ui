@@ -7,10 +7,11 @@ import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import PlayerProfile from './components/PlayerProfile';
 
-function AppContent() {
+function AppContent(instance: any) {
   const [showProfile, setShowProfile] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
 
+  console.log("Rendering AppContent with instance:", instance);
   return (
     <>
       <Navbar onProfileClick={() => setShowProfile(true)} />
@@ -67,7 +68,7 @@ function AppContent() {
 function App({ instance }: { instance: any }) {
   return (
     <MsalProvider instance={instance}>
-      <AppContent />
+      <AppContent instance={instance}/>
     </MsalProvider>
   );
 }

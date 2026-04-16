@@ -23,6 +23,7 @@ msalInstance.addEventCallback((event) => {
     if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS && event.payload) {
         const payload = event.payload as AuthenticationResult;
         const account = payload.account;
+        console.log(payload.idToken);
         msalInstance.setActiveAccount(account);
     }
 });

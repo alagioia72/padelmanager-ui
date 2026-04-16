@@ -9,7 +9,13 @@ export default function SignIn({ onSwitchToSignUp }: SignInProps) {
   const { instance } = useMsal();
 
   function handleSignIn() {
-    instance.loginRedirect(loginRequest).catch(console.error);
+    console.log("handleSignIn:");
+
+    instance.loginRedirect(loginRequest)
+    .then((response) => {
+      console.log("Login successful:", response);
+    })
+    .catch(console.error);
   }
 
   return (
