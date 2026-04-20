@@ -37,16 +37,9 @@ export default function SignUp({ onSwitchToSignIn }: SignUpProps) {
         </button>
       </div>
 
-      <div className="auth-divider">hai già un account?</div>
-
-      <div className="auth-actions" style={{ marginTop: '12px', marginBottom: 0 }}>
-        <button className="auth-btn auth-btn-secondary" onClick={onSwitchToSignIn}>
-          Accedi
-        </button>
-      </div>
-
       <p className="auth-note">
-        Registrandoti accetti i <a href="#">Termini di Servizio</a> e la <a href="#">Privacy Policy</a> di Gonetta.
+        Hai già un account?{' '}
+        <button className="inline-link" onClick={onSwitchToSignIn}>Accedi</button>
       </p>
     </div>
   );

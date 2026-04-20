@@ -9,13 +9,7 @@ export default function SignIn({ onSwitchToSignUp }: SignInProps) {
   const { instance } = useMsal();
 
   function handleSignIn() {
-    console.log("handleSignIn:");
-
-    instance.loginRedirect(loginRequest)
-    .then((response) => {
-      console.log("Login successful:", response);
-    })
-    .catch(console.error);
+    instance.loginRedirect(loginRequest).catch(console.error);
   }
 
   return (
@@ -41,16 +35,9 @@ export default function SignIn({ onSwitchToSignUp }: SignInProps) {
         </button>
       </div>
 
-      <div className="auth-divider">non hai ancora un account?</div>
-
-      <div className="auth-actions" style={{ marginTop: '12px', marginBottom: 0 }}>
-        <button className="auth-btn auth-btn-secondary" onClick={onSwitchToSignUp}>
-          Registrati gratis
-        </button>
-      </div>
-
       <p className="auth-note">
-        Accedendo accetti i <a href="#">Termini di Servizio</a> e la <a href="#">Privacy Policy</a> di Gonetta.
+        Non hai un account?{' '}
+        <button className="inline-link" onClick={onSwitchToSignUp}>Registrati gratis</button>
       </p>
     </div>
   );
