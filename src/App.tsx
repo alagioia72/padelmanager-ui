@@ -72,11 +72,10 @@ function AppContent() {
 
             <aside className="auth-right">
               <div className="auth-operator-card">
-                <SignIn onSwitchToSignUp={() => setAuthMode('signup')} />
-                {authMode === 'signup' && (
-                  <div className="auth-switch-note">
-                    <SignUp onSwitchToSignIn={() => setAuthMode('signin')} />
-                  </div>
+                {authMode === 'signin' ? (
+                  <SignIn onSwitchToSignUp={() => setAuthMode('signup')} />
+                ) : (
+                  <SignUp onSwitchToSignIn={() => setAuthMode('signin')} />
                 )}
               </div>
             </aside>
