@@ -43,7 +43,7 @@ function AppContent() {
 
         <UnauthenticatedTemplate>
           <div className="auth-page">
-            <div className="auth-left">
+            <section className="auth-left">
               <div className="auth-left-tag">Gonetta Platform</div>
               <h1>Il tuo padel,<br />senza limiti.</h1>
               <p className="auth-left-sub">
@@ -68,15 +68,18 @@ function AppContent() {
                   <span>Statistiche e analisi delle performance</span>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div className="auth-right">
-              {authMode === 'signin' ? (
+            <aside className="auth-right">
+              <div className="auth-operator-card">
                 <SignIn onSwitchToSignUp={() => setAuthMode('signup')} />
-              ) : (
-                <SignUp onSwitchToSignIn={() => setAuthMode('signin')} />
-              )}
-            </div>
+                {authMode === 'signup' && (
+                  <div className="auth-switch-note">
+                    <SignUp onSwitchToSignIn={() => setAuthMode('signin')} />
+                  </div>
+                )}
+              </div>
+            </aside>
           </div>
         </UnauthenticatedTemplate>
       </div>
