@@ -3,9 +3,12 @@ import { useMsal } from '@azure/msal-react';
 
 interface NavbarProps {
   onProfileClick: () => void;
+  isAdmin: boolean;
+  activeSection: 'dashboard' | 'admin';
+  onNavigate: (section: 'dashboard' | 'admin') => void;
 }
 
-export default function Navbar({ onProfileClick }: NavbarProps) {
+export default function Navbar({ onProfileClick, isAdmin, activeSection, onNavigate }: NavbarProps) {
   const { instance, accounts } = useMsal();
   const isAuthenticated = accounts.length > 0;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,11 +43,8 @@ export default function Navbar({ onProfileClick }: NavbarProps) {
 
         {isAuthenticated && (
           <div className="navbar-center">
-            <button className="navbar-link">🏠 Home</button>
-            <button className="navbar-link">🗓️ Partite</button>
-            <button className="navbar-link">🏆 Tornei</button>
-            <button className="navbar-link">📊 Classifiche</button>
-            <button className="navbar-link">🎾 Campi</button>
+            <button className={`navbar-link ${activeSection === 'dashboard' ? 'active' : ''}`} onClick={() => onNavigate('dashboard')}>Home</button>
+            {isAdmin && <button className={`navbar-link ${activeSection === 'admin' ? 'active' : ''}`} onClick={() => onNavigate('admin')}>Admin</button>}
           </div>
         )}
 
@@ -74,14 +74,9 @@ export default function Navbar({ onProfileClick }: NavbarProps) {
       <div className={`mobile-menu ${menuOpen ? 'open' : ''}`}>
         {isAuthenticated ? (
           <>
-            <button className="navbar-link" onClick={() => setMenuOpen(false)}>🏠 Home</button>
-            <button className="navbar-link" onClick={() => setMenuOpen(false)}>🗓️ Partite</button>
-            <button className="navbar-link" onClick={() => setMenuOpen(false)}>🏆 Tornei</button>
-            <button className="navbar-link" onClick={() => setMenuOpen(false)}>📊 Classifiche</button>
-            <button className="navbar-link" onClick={() => setMenuOpen(false)}>🎾 Campi</button>
-            <button className="btn-primary" onClick={() => { onProfileClick(); setMenuOpen(false); }}>
-              👤 Il mio profilo
-            </button>
+            <button className="navbar-link" onClick={() => { onNavigate('dashboard'); setMenuOpen(false); }}>Home</button>
+            {isAdmin && <button className="navbar-link" onClick={() => { onNavigate('admin'); setMenuOpen(false); }}>Admin</button>}
+            <button className="btn-primary" onClick={() => { onProfileClick(); setMenuOpen(false); }}>Il mio profilo</button>
           </>
         ) : (
           <>

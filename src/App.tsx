@@ -1,24 +1,43 @@
-import { useState } from 'react';
-import { MsalProvider, AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
+import { useMemo, useState } from 'react';
+import { MsalProvider, AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
 import './App.css';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
 import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import PlayerProfile from './components/PlayerProfile';
+import AdminPanel from './components/AdminPanel';
 
-function AppContent(instance: any) {
+function getRoles(account: any) {
+  const claims = account?.idTokenClaims ?? account?.idToken?.claims ?? {};
+  const roles = claims.roles ?? claims.role ?? claims.extension_Roles ?? [];
+  if (Array.isArray(roles)) return roles;
+  if (typeof roles === 'string') return [roles];
+  return [];
+}
+
+function AppContent() {
+  const { accounts } = useMsal();
   const [showProfile, setShowProfile] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'admin'>('dashboard');
 
-  console.log("Rendering AppContent with instance:", instance);
+  const account = accounts[0];
+  const roles = useMemo(() => getRoles(account), [account]);
+  const isAdmin = roles.includes('admin') || roles.includes('clubmanager');
+
   return (
     <>
-      <Navbar onProfileClick={() => setShowProfile(true)} />
+      <Navbar
+        onProfileClick={() => setShowProfile(true)}
+        isAdmin={isAdmin}
+        activeSection={activeSection}
+        onNavigate={setActiveSection}
+      />
 
       <div className="page-content">
         <AuthenticatedTemplate>
-          <Dashboard />
+          {activeSection === 'admin' && isAdmin ? <AdminPanel /> : <Dashboard />}
           {showProfile && <PlayerProfile onClose={() => setShowProfile(false)} />}
         </AuthenticatedTemplate>
 
@@ -27,7 +46,7 @@ function AppContent(instance: any) {
             <div className="auth-left">
               <div className="auth-left-tag">⭐ Gonetta Platform</div>
               <h1>Il tuo padel,<br />senza limiti.</h1>
-              <p>
+              <p className="auth-left-sub">
                 Prenota campi, iscriviti ai tornei, sfida altri giocatori e monitora
                 le tue statistiche — tutto in un unico posto.
               </p>
@@ -68,7 +87,7 @@ function AppContent(instance: any) {
 function App({ instance }: { instance: any }) {
   return (
     <MsalProvider instance={instance}>
-      <AppContent instance={instance}/>
+      <AppContent />
     </MsalProvider>
   );
 }
