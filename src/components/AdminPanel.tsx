@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
+type TokenProvider = () => Promise<string>;
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
 type Player = {
@@ -18,7 +20,11 @@ type FidelityAward = {
 
 type AdminTab = 'players' | 'awards';
 
-export default function AdminPanel() {
+type AdminPanelProps = {
+  getAccessToken: TokenProvider;
+};
+
+export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [tab, setTab] = useState<AdminTab>('players');
   const [players, setPlayers] = useState<Player[]>([]);
   const [awards, setAwards] = useState<FidelityAward[]>([]);
@@ -34,13 +40,22 @@ export default function AdminPanel() {
     [players, selectedPlayerId]
   );
 
+  async function authHeaders() {
+    const token = await getAccessToken();
+    return {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+  }
+
   async function loadData() {
     setLoading(true);
     setError('');
     try {
+      const headers = await authHeaders();
       const [playersRes, awardsRes] = await Promise.all([
-        fetch(`${API_BASE}/players`),
-        fetch(`${API_BASE}/fidelityawards`),
+        fetch(`${API_BASE}/players`, { headers }),
+        fetch(`${API_BASE}/fidelityawards`, { headers }),
       ]);
       if (!playersRes.ok) throw new Error('Errore caricamento players');
       if (!awardsRes.ok) throw new Error('Errore caricamento fidelity awards');
@@ -61,9 +76,10 @@ export default function AdminPanel() {
     if (!selectedPlayerId || !pointsToAdd) return;
     setError('');
     try {
+      const headers = await authHeaders();
       const res = await fetch(`${API_BASE}/players/${selectedPlayerId}/points`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ points: Number(pointsToAdd) }),
       });
       if (!res.ok) throw new Error('Impossibile assegnare i punti');
@@ -87,11 +103,12 @@ export default function AdminPanel() {
       points: Number(awardForm.points),
     };
     try {
+      const headers = await authHeaders();
       const res = await fetch(
         awardMode === 'create' ? `${API_BASE}/fidelityawards` : `${API_BASE}/fidelityawards/${awardForm.id}`,
         {
           method: awardMode === 'create' ? 'POST' : 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(payload),
         }
       );
@@ -106,7 +123,8 @@ export default function AdminPanel() {
   async function handleDeleteAward(id: number) {
     setError('');
     try {
-      const res = await fetch(`${API_BASE}/fidelityawards/${id}`, { method: 'DELETE' });
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/fidelityawards/${id}`, { method: 'DELETE', headers });
       if (!res.ok) throw new Error('Impossibile eliminare il premio');
       await loadData();
     } catch (e: any) {

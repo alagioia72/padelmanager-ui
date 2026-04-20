@@ -17,7 +17,7 @@ function getRoles(account: any) {
 }
 
 function AppContent() {
-  const { accounts } = useMsal();
+  const { accounts, instance } = useMsal();
   const [showProfile, setShowProfile] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [activeSection, setActiveSection] = useState<'dashboard' | 'admin'>('dashboard');
@@ -25,6 +25,15 @@ function AppContent() {
   const account = accounts[0];
   const roles = useMemo(() => getRoles(account), [account]);
   const isAdmin = roles.includes('admin') || roles.includes('clubmanager');
+
+  async function getAccessToken() {
+    if (!account) return '';
+    const result = await instance.acquireTokenSilent({
+      account,
+      scopes: [import.meta.env.VITE_AUTH_SCOPES],
+    });
+    return result.accessToken;
+  }
 
   return (
     <>
@@ -37,7 +46,7 @@ function AppContent() {
 
       <div className="page-content">
         <AuthenticatedTemplate>
-          {activeSection === 'admin' && isAdmin ? <AdminPanel /> : <Dashboard />}
+          {activeSection === 'admin' && isAdmin ? <AdminPanel getAccessToken={getAccessToken} /> : <Dashboard />}
           {showProfile && <PlayerProfile onClose={() => setShowProfile(false)} />}
         </AuthenticatedTemplate>
 
