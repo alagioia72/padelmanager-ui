@@ -7,33 +7,54 @@ import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import PlayerProfile from './components/PlayerProfile';
 import AdminPanel from './components/AdminPanel';
-
-function getRoles(account: any) {
-  const claims = account?.idTokenClaims ?? account?.idToken?.claims ?? {};
-  const roles = claims.roles ?? claims.role ?? claims.extension_Roles ?? [];
-  if (Array.isArray(roles)) return roles;
-  if (typeof roles === 'string') return [roles];
-  return [];
-}
+import { useAuth } from './auth/AuthProvider';
 
 function AppContent() {
-  const { accounts, instance } = useMsal();
   const [showProfile, setShowProfile] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [activeSection, setActiveSection] = useState<'dashboard' | 'admin'>('dashboard');
+
+  const { login, logout, roles, isAuthenticated, getAccessToken } = useAuth();
+  const isAdmin = roles.includes('admin') || roles.includes('clubmanager');
+  /*
+  const { accounts, instance } = useMsal();
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'admin'>('dashboard');
+  const [showProfile, setShowProfile] = useState(false);
 
   const account = accounts[0];
   const roles = useMemo(() => getRoles(account), [account]);
   const isAdmin = roles.includes('admin') || roles.includes('clubmanager');
 
   async function getAccessToken() {
+    
     if (!account) return '';
     const result = await instance.acquireTokenSilent({
       account,
       scopes: [import.meta.env.VITE_AUTH_SCOPES],
     });
     return result.accessToken;
+    
+    return await refreshToken().then(token => token.accessToken).catch(() => '');
   }
+
+  async function refreshToken() {
+    if (!account) return '';
+    const token = await instance.acquireTokenSilent({
+      account,
+      scopes: [import.meta.env.VITE_AUTH_SCOPES],
+    });
+    return token;
+  }
+
+  async function getRoles(account: any) {
+    const claims = account?.idTokenClaims ?? account?.idToken?.claims ?? await refreshToken().then(token => token.accessToken) ?? {};
+    const roles = claims.roles ?? claims.role ?? claims.extension_Roles ?? [];
+    if (Array.isArray(roles)) return roles;
+    if (typeof roles === 'string') return [roles];
+    return [];
+  }
+  */
 
   return (
     <>
@@ -95,11 +116,9 @@ function AppContent() {
   );
 }
 
-function App({ instance }: { instance: any }) {
+function App() {
   return (
-    <MsalProvider instance={instance}>
-      <AppContent />
-    </MsalProvider>
+    <AppContent />
   );
 }
 

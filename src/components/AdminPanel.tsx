@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
 
 type TokenProvider = () => Promise<string>;
 
@@ -53,14 +54,20 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
+      
       const [playersRes, awardsRes] = await Promise.all([
         fetch(`${API_BASE}/players`, { headers }),
         fetch(`${API_BASE}/fidelityawards`, { headers }),
       ]);
+      
+      //const playersRes = await axios.get(`${API_BASE}/players`, { headers });
+      //const awardsRes = await axios.get(`${API_BASE}/fidelityawards`, { headers });
+
       if (!playersRes.ok) throw new Error('Errore caricamento players');
       if (!awardsRes.ok) throw new Error('Errore caricamento fidelity awards');
       setPlayers(await playersRes.json());
       setAwards(await awardsRes.json());
+      
     } catch (e: any) {
       setError(e.message ?? 'Errore sconosciuto');
     } finally {

@@ -2,8 +2,7 @@
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License.
  */
-
-import { LogLevel } from '@azure/msal-browser';
+import { LogLevel, PublicClientApplication } from '@azure/msal-browser';
 
 /**
  * Configuration object to be passed to MSAL instance on creation. 
@@ -59,6 +58,8 @@ export const msalConfig = {
 export const loginRequest = {
     scopes: [import.meta.env.VITE_AUTH_SCOPES],
 };
+
+export const msalInstance = new PublicClientApplication(msalConfig);
 
 /**
  * An optional silentRequest object can be used to achieve silent SSO
