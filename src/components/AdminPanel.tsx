@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
-type TokenProvider = () => Promise<string>;
-
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+
+type TokenProvider = () => Promise<string>;
 
 type Player = {
   id: number;
@@ -34,6 +34,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [pointsToAdd, setPointsToAdd] = useState('');
   const [playerSearch, setPlayerSearch] = useState('');
   const [playerActionOpenId, setPlayerActionOpenId] = useState<number | null>(null);
+  const [pointsModalPlayer, setPointsModalPlayer] = useState<Player | null>(null);
+  const [pointsModalValue, setPointsModalValue] = useState('');
   const [awardForm, setAwardForm] = useState({ id: '', description: '', points: '' });
   const [awardMode, setAwardMode] = useState<'create' | 'edit'>('create');
 
@@ -104,6 +106,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
       if (!playerId) {
         setPointsToAdd('');
       }
+      setPointsModalPlayer(null);
+      setPointsModalValue('');
       await loadData();
     } catch (e: any) {
       setError(e.message ?? 'Errore assegnazione punti');
@@ -156,6 +160,11 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setAwardMode('edit');
     setTab('awards');
     setAwardForm({ id: String(award.id), description: award.description, points: String(award.points) });
+  }
+
+  function openPointsModal(player: Player) {
+    setPointsModalPlayer(player);
+    setPointsModalValue('');
   }
 
   return (
@@ -215,23 +224,11 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                         <button
                           className="admin-player-menu-item"
                           onClick={() => {
-                            setSelectedPlayerId(String(player.id));
-                            setPointsToAdd('');
-                            setTab('players');
+                            openPointsModal(player);
                             setPlayerActionOpenId(null);
                           }}
                         >
                           Assegna punti
-                        </button>
-                        <button
-                          className="admin-player-menu-item"
-                          onClick={() => {
-                            setSelectedPlayerId(String(player.id));
-                            setPlayerSearch(`${player.first_name} ${player.last_name}`);
-                            setPlayerActionOpenId(null);
-                          }}
-                        >
-                          Seleziona player
                         </button>
                       </div>
                     )}
@@ -239,29 +236,6 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                 </div>
               );
             })}
-          </div>
-
-          <div className="admin-player-assign">
-            <div className="admin-form admin-form-inline">
-              <select value={selectedPlayerId} onChange={(e) => setSelectedPlayerId(e.target.value)}>
-                <option value="">Seleziona un player</option>
-                {filteredPlayers.map((player) => (
-                  <option key={player.id} value={player.id}>
-                    {player.first_name} {player.last_name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                min="1"
-                placeholder="Punti da assegnare"
-                value={pointsToAdd}
-                onChange={(e) => setPointsToAdd(e.target.value)}
-              />
-              <button className="btn-primary" onClick={() => handleAddPoints()}>
-                Assegna punti fedeltà
-              </button>
-            </div>
           </div>
 
           {selectedPlayer && (
@@ -315,6 +289,44 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
             ))}
           </div>
         </section>
+      )}
+
+      {pointsModalPlayer && (
+        <div className="overlay" onClick={() => setPointsModalPlayer(null)}>
+          <div className="profile-modal admin-points-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="profile-modal-header">
+              <button className="profile-modal-close" onClick={() => setPointsModalPlayer(null)}>✕</button>
+              <div className="profile-modal-name">{pointsModalPlayer.first_name} {pointsModalPlayer.last_name}</div>
+              <div className="profile-modal-email">Assegnazione punti fedeltà</div>
+            </div>
+            <div className="profile-modal-body">
+              <div className="profile-info-row">
+                <span className="profile-info-icon">🎾</span>
+                <div>
+                  <div className="profile-info-label">Player selezionato</div>
+                  <div className="profile-info-value">{pointsModalPlayer.first_name} {pointsModalPlayer.last_name}</div>
+                </div>
+              </div>
+              <div className="admin-form admin-form-inline">
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Punti da assegnare"
+                  value={pointsModalValue}
+                  onChange={(e) => setPointsModalValue(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="profile-modal-footer">
+              <button className="btn-primary" onClick={() => handleAddPoints(pointsModalPlayer.id, pointsModalValue)}>
+                Conferma assegnazione
+              </button>
+              <button className="btn-secondary" onClick={() => setPointsModalPlayer(null)}>
+                Annulla
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
