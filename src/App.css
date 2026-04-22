@@ -519,6 +519,45 @@
   border: 1px solid var(--border);
 }
 
+.admin-player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-player-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-player-actions {
+  margin-top: 0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.admin-points-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--primary);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.admin-points-btn:hover {
+  background: rgba(45, 114, 184, 0.14);
+  border-color: var(--primary-dark);
+}
+
 .admin-list-item strong {
   display: block;
   color: var(--text-heading);

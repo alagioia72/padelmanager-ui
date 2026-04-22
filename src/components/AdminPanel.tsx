@@ -32,7 +32,6 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [error, setError] = useState('');
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const [playerSearch, setPlayerSearch] = useState('');
-  const [playerActionOpenId, setPlayerActionOpenId] = useState<number | null>(null);
   const [pointsModalPlayer, setPointsModalPlayer] = useState<Player | null>(null);
   const [pointsModalValue, setPointsModalValue] = useState('');
   const [awardForm, setAwardForm] = useState({ id: '', description: '', points: '' });
@@ -198,40 +197,24 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
           </div>
 
           <div className="admin-list admin-players-list">
-            {filteredPlayers.map((player) => {
-              const isOpen = playerActionOpenId === player.id;
-              return (
-                <div className="admin-list-item admin-player-row" key={player.id}>
-                  <div className="admin-player-main">
-                    <strong>{player.first_name} {player.last_name}</strong>
-                    <span>#{player.id} · Genere: {player.gender}</span>
-                    <p>Entra ID: {player.entra_id}</p>
-                  </div>
-
-                  <div className="admin-player-actions">
-                    <button
-                      className="admin-points-btn"
-                      onClick={() => openPointsModal(player)}
-                    >
-                      Assegna punti
-                    </button>
-                    {isOpen && (
-                      <div className="admin-player-menu">
-                        <button
-                          className="admin-player-menu-item"
-                          onClick={() => {
-                            openPointsModal(player);
-                            setPlayerActionOpenId(null);
-                          }}
-                        >
-                          Assegna punti
-                        </button>
-                      </div>
-                    )}
-                  </div>
+            {filteredPlayers.map((player) => (
+              <div className="admin-list-item admin-player-row" key={player.id}>
+                <div className="admin-player-main">
+                  <strong>{player.first_name} {player.last_name}</strong>
+                  <span>#{player.id} · Genere: {player.gender}</span>
+                  <p>Entra ID: {player.entra_id}</p>
                 </div>
-              );
-            })}
+
+                <div className="admin-player-actions">
+                  <button
+                    className="admin-points-btn"
+                    onClick={() => openPointsModal(player)}
+                  >
+                    Assegna punti
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           {selectedPlayer && (
