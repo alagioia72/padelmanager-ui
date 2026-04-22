@@ -31,7 +31,6 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
-  const [pointsToAdd, setPointsToAdd] = useState('');
   const [playerSearch, setPlayerSearch] = useState('');
   const [playerActionOpenId, setPlayerActionOpenId] = useState<number | null>(null);
   const [pointsModalPlayer, setPointsModalPlayer] = useState<Player | null>(null);
@@ -92,7 +91,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
 
   async function handleAddPoints(playerId?: number, pointsValue?: string) {
     const targetPlayerId = playerId ? String(playerId) : selectedPlayerId;
-    const targetPoints = pointsValue ?? pointsToAdd;
+    const targetPoints = pointsValue ?? pointsModalValue;
     if (!targetPlayerId || !targetPoints) return;
     setError('');
     try {
@@ -103,9 +102,6 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
         body: JSON.stringify({ points: Number(targetPoints) }),
       });
       if (!res.ok) throw new Error('Impossibile assegnare i punti');
-      if (!playerId) {
-        setPointsToAdd('');
-      }
       setPointsModalPlayer(null);
       setPointsModalValue('');
       await loadData();
@@ -214,10 +210,10 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
 
                   <div className="admin-player-actions">
                     <button
-                      className="btn-secondary"
-                      onClick={() => setPlayerActionOpenId(isOpen ? null : player.id)}
+                      className="admin-points-btn"
+                      onClick={() => openPointsModal(player)}
                     >
-                      Azioni
+                      Assegna punti
                     </button>
                     {isOpen && (
                       <div className="admin-player-menu">
