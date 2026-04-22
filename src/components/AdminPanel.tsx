@@ -33,6 +33,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [error, setError] = useState('');
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const [pointsToAdd, setPointsToAdd] = useState('');
+  const [playerSearch, setPlayerSearch] = useState('');
+  const [playerActionOpenId, setPlayerActionOpenId] = useState<number | null>(null);
   const [awardForm, setAwardForm] = useState({ id: '', description: '', points: '' });
   const [awardMode, setAwardMode] = useState<'create' | 'edit'>('create');
 
@@ -40,6 +42,20 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     () => players.find((player) => String(player.id) === selectedPlayerId),
     [players, selectedPlayerId]
   );
+
+  const filteredPlayers = useMemo(() => {
+    const query = playerSearch.trim().toLowerCase();
+    if (!query) return players;
+    return players.filter((player) => {
+      const fullName = `${player.first_name} ${player.last_name}`.toLowerCase();
+      return (
+        fullName.includes(query) ||
+        player.gender.toLowerCase().includes(query) ||
+        player.entra_id.toLowerCase().includes(query) ||
+        String(player.id).includes(query)
+      );
+    });
+  }, [players, playerSearch]);
 
   async function authHeaders() {
     const token = await getAccessToken();
@@ -54,20 +70,14 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      
       const [playersRes, awardsRes] = await Promise.all([
         fetch(`${API_BASE}/players`, { headers }),
         fetch(`${API_BASE}/fidelityawards`, { headers }),
       ]);
-      
-      //const playersRes = await axios.get(`${API_BASE}/players`, { headers });
-      //const awardsRes = await axios.get(`${API_BASE}/fidelityawards`, { headers });
-
       if (!playersRes.ok) throw new Error('Errore caricamento players');
       if (!awardsRes.ok) throw new Error('Errore caricamento fidelity awards');
       setPlayers(await playersRes.json());
       setAwards(await awardsRes.json());
-      
     } catch (e: any) {
       setError(e.message ?? 'Errore sconosciuto');
     } finally {
@@ -79,18 +89,22 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     loadData();
   }, []);
 
-  async function handleAddPoints() {
-    if (!selectedPlayerId || !pointsToAdd) return;
+  async function handleAddPoints(playerId?: number, pointsValue?: string) {
+    const targetPlayerId = playerId ? String(playerId) : selectedPlayerId;
+    const targetPoints = pointsValue ?? pointsToAdd;
+    if (!targetPlayerId || !targetPoints) return;
     setError('');
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/players/${selectedPlayerId}/points`, {
+      const res = await fetch(`${API_BASE}/players/${targetPlayerId}/points`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ points: Number(pointsToAdd) }),
+        body: JSON.stringify({ points: Number(targetPoints) }),
       });
       if (!res.ok) throw new Error('Impossibile assegnare i punti');
-      setPointsToAdd('');
+      if (!playerId) {
+        setPointsToAdd('');
+      }
       await loadData();
     } catch (e: any) {
       setError(e.message ?? 'Errore assegnazione punti');
@@ -168,38 +182,87 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
         <section className="admin-card">
           <div className="admin-section-header">
             <h3>Elenco players</h3>
-            <span className="admin-badge">{players.length} utenti</span>
+            <span className="admin-badge">{filteredPlayers.length} / {players.length}</span>
           </div>
 
           <div className="admin-form admin-form-inline">
-            <select value={selectedPlayerId} onChange={(e) => setSelectedPlayerId(e.target.value)}>
-              <option value="">Seleziona un player</option>
-              {players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.first_name} {player.last_name}
-                </option>
-              ))}
-            </select>
             <input
-              type="number"
-              min="1"
-              placeholder="Punti da assegnare"
-              value={pointsToAdd}
-              onChange={(e) => setPointsToAdd(e.target.value)}
+              placeholder="Cerca per nome, ID, genere o entra ID"
+              value={playerSearch}
+              onChange={(e) => setPlayerSearch(e.target.value)}
             />
-            <button className="btn-primary" onClick={handleAddPoints}>
-              Assegna punti fedeltà
-            </button>
           </div>
 
-          <div className="admin-list">
-            {players.map((player) => (
-              <div className="admin-list-item" key={player.id}>
-                <strong>{player.first_name} {player.last_name}</strong>
-                <span>Genere: {player.gender}</span>
-                <p>Entra ID: {player.entra_id}</p>
-              </div>
-            ))}
+          <div className="admin-list admin-players-list">
+            {filteredPlayers.map((player) => {
+              const isOpen = playerActionOpenId === player.id;
+              return (
+                <div className="admin-list-item admin-player-row" key={player.id}>
+                  <div className="admin-player-main">
+                    <strong>{player.first_name} {player.last_name}</strong>
+                    <span>#{player.id} · Genere: {player.gender}</span>
+                    <p>Entra ID: {player.entra_id}</p>
+                  </div>
+
+                  <div className="admin-player-actions">
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setPlayerActionOpenId(isOpen ? null : player.id)}
+                    >
+                      Azioni
+                    </button>
+                    {isOpen && (
+                      <div className="admin-player-menu">
+                        <button
+                          className="admin-player-menu-item"
+                          onClick={() => {
+                            setSelectedPlayerId(String(player.id));
+                            setPointsToAdd('');
+                            setTab('players');
+                            setPlayerActionOpenId(null);
+                          }}
+                        >
+                          Assegna punti
+                        </button>
+                        <button
+                          className="admin-player-menu-item"
+                          onClick={() => {
+                            setSelectedPlayerId(String(player.id));
+                            setPlayerSearch(`${player.first_name} ${player.last_name}`);
+                            setPlayerActionOpenId(null);
+                          }}
+                        >
+                          Seleziona player
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="admin-player-assign">
+            <div className="admin-form admin-form-inline">
+              <select value={selectedPlayerId} onChange={(e) => setSelectedPlayerId(e.target.value)}>
+                <option value="">Seleziona un player</option>
+                {filteredPlayers.map((player) => (
+                  <option key={player.id} value={player.id}>
+                    {player.first_name} {player.last_name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min="1"
+                placeholder="Punti da assegnare"
+                value={pointsToAdd}
+                onChange={(e) => setPointsToAdd(e.target.value)}
+              />
+              <button className="btn-primary" onClick={() => handleAddPoints()}>
+                Assegna punti fedeltà
+              </button>
+            </div>
           </div>
 
           {selectedPlayer && (
