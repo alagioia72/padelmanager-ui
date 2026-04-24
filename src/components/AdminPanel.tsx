@@ -44,6 +44,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [error, setError] = useState('');
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const [playerSearch, setPlayerSearch] = useState('');
+  const [fidelityPlayerId, setFidelityPlayerId] = useState('');
   const [pointsModalPlayer, setPointsModalPlayer] = useState<Player | null>(null);
   const [pointsModalPoints, setPointsModalPoints] = useState('');
   const [pointsModalCost, setPointsModalCost] = useState('');
@@ -86,17 +87,33 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      const [playersRes, awardsRes, fidelityRes] = await Promise.all([
+      const [playersRes, awardsRes] = await Promise.all([
         fetch(`${API_BASE}/players`, { headers }),
         fetch(`${API_BASE}/fidelityawards`, { headers }),
-        fetch(`${API_BASE}/playerfidelityawards`, { headers }),
       ]);
       if (!playersRes.ok) throw new Error('Errore caricamento players');
       if (!awardsRes.ok) throw new Error('Errore caricamento fidelity awards');
-      if (!fidelityRes.ok) throw new Error('Errore caricamento movimenti fidelity');
       setPlayers(await playersRes.json());
       setAwards(await awardsRes.json());
-      setFidelityAwards(await fidelityRes.json());
+    } catch (e: any) {
+      setError(e.message ?? 'Errore sconosciuto');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadFidelityAwards(playerId: string) {
+    if (!playerId) {
+      setFidelityAwards([]);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/playerfidelityawards/player/${playerId}`, { headers });
+      if (!res.ok) throw new Error('Errore caricamento movimenti fidelity');
+      setFidelityAwards(await res.json());
     } catch (e: any) {
       setError(e.message ?? 'Errore sconosciuto');
     } finally {
@@ -258,12 +275,27 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
             <span className="admin-badge">{sortedFidelityAwards.length}</span>
           </div>
 
+          <div className="admin-form admin-form-inline">
+            <select
+              value={fidelityPlayerId}
+              onChange={(e) => {
+                setFidelityPlayerId(e.target.value);
+                loadFidelityAwards(e.target.value);
+              }}
+            >
+              <option value="">Seleziona player</option>
+              {players.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.first_name} {player.last_name} #{player.id}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="admin-list">
             {sortedFidelityAwards.map((item) => (
               <div className="admin-list-item" key={item.id ?? `${item.player_id}-${item.charge_datetime}`}>
-                <strong>
-                  {item.player_first_name ?? 'Player'} {item.player_last_name ?? ''}
-                </strong>
+                <strong>Player #{item.player_id}</strong>
                 <span>Punti: {item.points} · Costo: {item.cost}</span>
                 <p>Data: {new Date(item.charge_datetime).toLocaleString('it-IT')}</p>
               </div>
