@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
-
-type TokenProvider = () => Promise<string>;
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+
+type TokenProvider = () => Promise<string>;
 
 type Player = {
   id: number;
@@ -19,7 +18,18 @@ type FidelityAward = {
   points: number;
 };
 
-type AdminTab = 'players' | 'awards';
+type PlayerFidelityAward = {
+  id?: number;
+  player_id: number;
+  points: number;
+  cost: number;
+  charge_datetime: string;
+  award_description?: string;
+  player_first_name?: string;
+  player_last_name?: string;
+};
+
+type AdminTab = 'players' | 'awards' | 'fidelity';
 
 type AdminPanelProps = {
   getAccessToken: TokenProvider;
@@ -29,10 +39,14 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [tab, setTab] = useState<AdminTab>('players');
   const [players, setPlayers] = useState<Player[]>([]);
   const [awards, setAwards] = useState<FidelityAward[]>([]);
+  const [fidelityAwards, setFidelityAwards] = useState<PlayerFidelityAward[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
-  const [pointsToAdd, setPointsToAdd] = useState('');
+  const [playerSearch, setPlayerSearch] = useState('');
+  const [pointsModalPlayer, setPointsModalPlayer] = useState<Player | null>(null);
+  const [pointsModalPoints, setPointsModalPoints] = useState('');
+  const [pointsModalCost, setPointsModalCost] = useState('');
   const [awardForm, setAwardForm] = useState({ id: '', description: '', points: '' });
   const [awardMode, setAwardMode] = useState<'create' | 'edit'>('create');
 
@@ -40,6 +54,28 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     () => players.find((player) => String(player.id) === selectedPlayerId),
     [players, selectedPlayerId]
   );
+
+  const filteredPlayers = useMemo(() => {
+    const query = playerSearch.trim().toLowerCase();
+    if (!query) return players;
+    return players.filter((player) => {
+      const fullName = `${player.first_name} ${player.last_name}`.toLowerCase();
+      return (
+        fullName.includes(query) ||
+        player.gender.toLowerCase().includes(query) ||
+        player.entra_id.toLowerCase().includes(query) ||
+        String(player.id).includes(query)
+      );
+    });
+  }, [players, playerSearch]);
+
+  const sortedFidelityAwards = useMemo(() => {
+    return [...fidelityAwards].sort((a, b) => new Date(b.charge_datetime).getTime() - new Date(a.charge_datetime).getTime());
+  }, [fidelityAwards]);
+
+  const totalFidelityPoints = useMemo(() => {
+    return fidelityAwards.reduce((sum, item) => sum + Number(item.points ?? 0), 0);
+  }, [fidelityAwards]);
 
   async function authHeaders() {
     const token = await getAccessToken();
@@ -54,20 +90,33 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      
       const [playersRes, awardsRes] = await Promise.all([
         fetch(`${API_BASE}/players`, { headers }),
         fetch(`${API_BASE}/fidelityawards`, { headers }),
       ]);
-      
-      //const playersRes = await axios.get(`${API_BASE}/players`, { headers });
-      //const awardsRes = await axios.get(`${API_BASE}/fidelityawards`, { headers });
-
       if (!playersRes.ok) throw new Error('Errore caricamento players');
       if (!awardsRes.ok) throw new Error('Errore caricamento fidelity awards');
       setPlayers(await playersRes.json());
       setAwards(await awardsRes.json());
-      
+    } catch (e: any) {
+      setError(e.message ?? 'Errore sconosciuto');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadFidelityAwards(playerId: string) {
+    if (!playerId) {
+      setFidelityAwards([]);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/playerfidelityawards/player/${playerId}`, { headers });
+      if (!res.ok) throw new Error('Errore caricamento movimenti fidelity');
+      setFidelityAwards(await res.json());
     } catch (e: any) {
       setError(e.message ?? 'Errore sconosciuto');
     } finally {
@@ -79,21 +128,58 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     loadData();
   }, []);
 
-  async function handleAddPoints() {
-    if (!selectedPlayerId || !pointsToAdd) return;
+  async function handleAddPoints(playerId?: number, pointsValue?: string, costValue?: string) {
+    const targetPlayerId = playerId ? String(playerId) : selectedPlayerId;
+    const targetPoints = pointsValue ?? pointsModalPoints;
+    const targetCost = costValue ?? pointsModalCost;
+    if (!targetPlayerId || !targetPoints || !targetCost) return;
     setError('');
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/players/${selectedPlayerId}/points`, {
+      const res = await fetch(`${API_BASE}/playerfidelityawards`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ points: Number(pointsToAdd) }),
+        body: JSON.stringify({
+          player_id: Number(targetPlayerId),
+          points: Number(targetPoints),
+          charge_datetime: new Date().toISOString(),
+          cost: Number(targetCost),
+        }),
       });
       if (!res.ok) throw new Error('Impossibile assegnare i punti');
-      setPointsToAdd('');
+      setPointsModalPlayer(null);
+      setPointsModalPoints('');
+      setPointsModalCost('');
       await loadData();
     } catch (e: any) {
       setError(e.message ?? 'Errore assegnazione punti');
+    }
+  }
+
+  async function handleUpdateFidelityAward(playerId: number, pointsValue: string, costValue: string, itemId: number) {
+    if (!pointsValue || !costValue) return;
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/playerfidelityawards`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          player_id: playerId,
+          points: Number(pointsValue),
+          charge_datetime: new Date().toISOString(),
+          cost: Number(costValue),
+        }),
+      });
+      if (!res.ok) throw new Error('Impossibile modificare i punti');
+      setPointsModalPlayer(null);
+      setPointsModalPoints('');
+      setPointsModalCost('');
+      if (selectedPlayerId) {
+        await loadFidelityAwards(selectedPlayerId);
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Errore modifica punti');
     }
   }
 
@@ -145,6 +231,49 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setAwardForm({ id: String(award.id), description: award.description, points: String(award.points) });
   }
 
+  function openPointsModal(player: Player) {
+    setPointsModalPlayer(player);
+    setPointsModalPoints('');
+    setPointsModalCost('');
+  }
+
+  function openFidelityAwards(player: Player) {
+    setSelectedPlayerId(String(player.id));
+    setTab('fidelity');
+    loadFidelityAwards(String(player.id));
+  }
+
+  async function handleDeleteFidelityAward(id: number) {
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/playerfidelityawards/${id}`, { method: 'DELETE', headers });
+      if (!res.ok) throw new Error('Impossibile eliminare il movimento');
+      if (selectedPlayerId) {
+        await loadFidelityAwards(selectedPlayerId);
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Errore eliminazione movimento');
+    }
+  }
+
+  function handleEditFidelityAward(item: PlayerFidelityAward) {
+    const player = players.find((p) => p.id === item.player_id);
+    if (player) {
+      openPointsModal(player);
+      setPointsModalPoints(String(item.points));
+      setPointsModalCost(String(item.cost));
+      setSelectedPlayerId(String(item.player_id));
+      setTab('players');
+    }
+  }
+
+  function confirmDeleteFidelityAward(id: number) {
+    const confirmed = window.confirm('Vuoi davvero eliminare questo movimento punti?');
+    if (!confirmed) return;
+    handleDeleteFidelityAward(id);
+  }
+
   return (
     <div className="dashboard">
       <div className="dashboard-greeting">
@@ -159,6 +288,9 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
         <button className={`admin-tab ${tab === 'players' ? 'active' : ''}`} onClick={() => setTab('players')}>
           Elenco players
         </button>
+        <button className={`admin-tab ${tab === 'fidelity' ? 'active' : ''}`} onClick={() => setTab('fidelity')}>
+          Punti fedeltà
+        </button>
         <button className={`admin-tab ${tab === 'awards' ? 'active' : ''}`} onClick={() => setTab('awards')}>
           Premi fedeltà
         </button>
@@ -168,36 +300,34 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
         <section className="admin-card">
           <div className="admin-section-header">
             <h3>Elenco players</h3>
-            <span className="admin-badge">{players.length} utenti</span>
+            <span className="admin-badge">{filteredPlayers.length} / {players.length}</span>
           </div>
 
           <div className="admin-form admin-form-inline">
-            <select value={selectedPlayerId} onChange={(e) => setSelectedPlayerId(e.target.value)}>
-              <option value="">Seleziona un player</option>
-              {players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.first_name} {player.last_name}
-                </option>
-              ))}
-            </select>
             <input
-              type="number"
-              min="1"
-              placeholder="Punti da assegnare"
-              value={pointsToAdd}
-              onChange={(e) => setPointsToAdd(e.target.value)}
+              placeholder="Cerca per nome, ID, genere o entra ID"
+              value={playerSearch}
+              onChange={(e) => setPlayerSearch(e.target.value)}
             />
-            <button className="btn-primary" onClick={handleAddPoints}>
-              Assegna punti fedeltà
-            </button>
           </div>
 
-          <div className="admin-list">
-            {players.map((player) => (
-              <div className="admin-list-item" key={player.id}>
-                <strong>{player.first_name} {player.last_name}</strong>
-                <span>Genere: {player.gender}</span>
-                <p>Entra ID: {player.entra_id}</p>
+          <div className="admin-list admin-players-list">
+            {filteredPlayers.map((player) => (
+              <div className="admin-list-item admin-player-row" key={player.id}>
+                <div className="admin-player-main">
+                  <strong>{player.first_name} {player.last_name}</strong>
+                  <span>#{player.id} · Genere: {player.gender}</span>
+                  <p>Entra ID: {player.entra_id}</p>
+                </div>
+
+                <div className="admin-player-actions">
+                  <button className="admin-points-btn" onClick={() => openPointsModal(player)}>
+                    Assegna punti
+                  </button>
+                  <button className="admin-fidelity-btn" onClick={() => openFidelityAwards(player)}>
+                    Punti fedeltà
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -207,6 +337,36 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
               Player selezionato: {selectedPlayer.first_name} {selectedPlayer.last_name}
             </div>
           )}
+        </section>
+      ) : tab === 'fidelity' ? (
+        <section className="admin-card">
+          <div className="admin-section-header">
+            <h3>Elenco punti fedeltà · Totale {totalFidelityPoints}</h3>
+            <span className="admin-badge">{sortedFidelityAwards.length}</span>
+          </div>
+          {selectedPlayer && (
+            <div className="admin-highlight">
+              Punti di: {selectedPlayer.first_name} {selectedPlayer.last_name}
+            </div>
+          )}
+
+          <div className="admin-list">
+            {sortedFidelityAwards.map((item) => (
+              <div className="admin-list-item admin-fidelity-list-item" key={item.id ?? `${item.player_id}-${item.charge_datetime}`}>
+                <strong>Player #{item.player_id}</strong>
+                <span>Punti: {item.points} · Costo: {item.cost}</span>
+                <p>Data: {new Date(item.charge_datetime).toLocaleString('it-IT')}</p>
+                <div className="admin-item-actions">
+                  <button className="btn-secondary" onClick={() => handleEditFidelityAward(item)}>Modifica</button>
+                  {item.id && (
+                    <button className="btn-outline-danger" onClick={() => confirmDeleteFidelityAward(item.id)}>
+                      Elimina
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       ) : (
         <section className="admin-card">
@@ -253,6 +413,57 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
             ))}
           </div>
         </section>
+      )}
+
+      {pointsModalPlayer && (
+        <div className="overlay" onClick={() => setPointsModalPlayer(null)}>
+          <div className="profile-modal admin-points-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="profile-modal-header">
+              <button className="profile-modal-close" onClick={() => setPointsModalPlayer(null)}>✕</button>
+              <div className="profile-modal-name">{pointsModalPlayer.first_name} {pointsModalPlayer.last_name}</div>
+              <div className="profile-modal-email">Assegnazione punti fedeltà</div>
+            </div>
+            <div className="profile-modal-body">
+              <div className="profile-info-row">
+                <span className="profile-info-icon">🎾</span>
+                <div>
+                  <div className="profile-info-label">Player selezionato</div>
+                  <div className="profile-info-value">{pointsModalPlayer.first_name} {pointsModalPlayer.last_name}</div>
+                </div>
+              </div>
+              <div className="admin-form admin-form-inline">
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Punti"
+                  value={pointsModalPoints}
+                  onChange={(e) => setPointsModalPoints(e.target.value)}
+                />
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Costo"
+                  value={pointsModalCost}
+                  onChange={(e) => setPointsModalCost(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="profile-modal-footer">
+              {tab === 'players' ? (
+                <button className="btn-primary" onClick={() => handleAddPoints(pointsModalPlayer.id, pointsModalPoints, pointsModalCost)}>
+                  Conferma assegnazione
+                </button>
+              ) : (
+                <button className="btn-primary" onClick={() => handleUpdateFidelityAward(pointsModalPlayer.id, pointsModalPoints, pointsModalCost, Number(pointsModalPlayer.id))}>
+                  Salva modifiche
+                </button>
+              )}
+              <button className="btn-secondary" onClick={() => setPointsModalPlayer(null)}>
+                Annulla
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
