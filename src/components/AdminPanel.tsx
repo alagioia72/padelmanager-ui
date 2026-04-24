@@ -156,6 +156,33 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     }
   }
 
+  async function handleUpdateFidelityAward(playerId: number, pointsValue: string, costValue: string, itemId: number) {
+    if (!pointsValue || !costValue) return;
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/playerfidelityawards`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          player_id: playerId,
+          points: Number(pointsValue),
+          charge_datetime: new Date().toISOString(),
+          cost: Number(costValue),
+        }),
+      });
+      if (!res.ok) throw new Error('Impossibile modificare i punti');
+      setPointsModalPlayer(null);
+      setPointsModalPoints('');
+      setPointsModalCost('');
+      if (selectedPlayerId) {
+        await loadFidelityAwards(selectedPlayerId);
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Errore modifica punti');
+    }
+  }
+
   function resetAwardForm() {
     setAwardForm({ id: '', description: '', points: '' });
     setAwardMode('create');
@@ -236,6 +263,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
       openPointsModal(player);
       setPointsModalPoints(String(item.points));
       setPointsModalCost(String(item.cost));
+      setSelectedPlayerId(String(item.player_id));
       setTab('players');
     }
   }
@@ -421,9 +449,15 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
               </div>
             </div>
             <div className="profile-modal-footer">
-              <button className="btn-primary" onClick={() => handleAddPoints(pointsModalPlayer.id, pointsModalPoints, pointsModalCost)}>
-                Conferma assegnazione
-              </button>
+              {tab === 'players' ? (
+                <button className="btn-primary" onClick={() => handleAddPoints(pointsModalPlayer.id, pointsModalPoints, pointsModalCost)}>
+                  Conferma assegnazione
+                </button>
+              ) : (
+                <button className="btn-primary" onClick={() => handleUpdateFidelityAward(pointsModalPlayer.id, pointsModalPoints, pointsModalCost, Number(pointsModalPlayer.id))}>
+                  Salva modifiche
+                </button>
+              )}
               <button className="btn-secondary" onClick={() => setPointsModalPlayer(null)}>
                 Annulla
               </button>
