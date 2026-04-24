@@ -33,7 +33,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const [playerSearch, setPlayerSearch] = useState('');
   const [pointsModalPlayer, setPointsModalPlayer] = useState<Player | null>(null);
-  const [pointsModalValue, setPointsModalValue] = useState('');
+  const [pointsModalPoints, setPointsModalPoints] = useState('');
+  const [pointsModalCost, setPointsModalCost] = useState('');
   const [awardForm, setAwardForm] = useState({ id: '', description: '', points: '' });
   const [awardMode, setAwardMode] = useState<'create' | 'edit'>('create');
 
@@ -88,21 +89,28 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     loadData();
   }, []);
 
-  async function handleAddPoints(playerId?: number, pointsValue?: string) {
+  async function handleAddPoints(playerId?: number, pointsValue?: string, costValue?: string) {
     const targetPlayerId = playerId ? String(playerId) : selectedPlayerId;
-    const targetPoints = pointsValue ?? pointsModalValue;
-    if (!targetPlayerId || !targetPoints) return;
+    const targetPoints = pointsValue ?? pointsModalPoints;
+    const targetCost = costValue ?? pointsModalCost;
+    if (!targetPlayerId || !targetPoints || !targetCost) return;
     setError('');
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/players/${targetPlayerId}/points`, {
+      const res = await fetch(`${API_BASE}/playerfidelityawards`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ points: Number(targetPoints) }),
+        body: JSON.stringify({
+          player_id: Number(targetPlayerId),
+          points: Number(targetPoints),
+          charge_datetime: new Date().toISOString(),
+          cost: Number(targetCost),
+        }),
       });
       if (!res.ok) throw new Error('Impossibile assegnare i punti');
       setPointsModalPlayer(null);
-      setPointsModalValue('');
+      setPointsModalPoints('');
+      setPointsModalCost('');
       await loadData();
     } catch (e: any) {
       setError(e.message ?? 'Errore assegnazione punti');
@@ -159,7 +167,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
 
   function openPointsModal(player: Player) {
     setPointsModalPlayer(player);
-    setPointsModalValue('');
+    setPointsModalPoints('');
+    setPointsModalCost('');
   }
 
   return (
@@ -206,10 +215,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                 </div>
 
                 <div className="admin-player-actions">
-                  <button
-                    className="admin-points-btn"
-                    onClick={() => openPointsModal(player)}
-                  >
+                  <button className="admin-points-btn" onClick={() => openPointsModal(player)}>
                     Assegna punti
                   </button>
                 </div>
@@ -290,14 +296,21 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                 <input
                   type="number"
                   min="1"
-                  placeholder="Punti da assegnare"
-                  value={pointsModalValue}
-                  onChange={(e) => setPointsModalValue(e.target.value)}
+                  placeholder="Punti"
+                  value={pointsModalPoints}
+                  onChange={(e) => setPointsModalPoints(e.target.value)}
+                />
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Costo"
+                  value={pointsModalCost}
+                  onChange={(e) => setPointsModalCost(e.target.value)}
                 />
               </div>
             </div>
             <div className="profile-modal-footer">
-              <button className="btn-primary" onClick={() => handleAddPoints(pointsModalPlayer.id, pointsModalValue)}>
+              <button className="btn-primary" onClick={() => handleAddPoints(pointsModalPlayer.id, pointsModalPoints, pointsModalCost)}>
                 Conferma assegnazione
               </button>
               <button className="btn-secondary" onClick={() => setPointsModalPlayer(null)}>
