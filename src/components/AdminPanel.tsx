@@ -44,7 +44,6 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [error, setError] = useState('');
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const [playerSearch, setPlayerSearch] = useState('');
-  const [fidelityPlayerId, setFidelityPlayerId] = useState('');
   const [pointsModalPlayer, setPointsModalPlayer] = useState<Player | null>(null);
   const [pointsModalPoints, setPointsModalPoints] = useState('');
   const [pointsModalCost, setPointsModalCost] = useState('');
@@ -207,6 +206,12 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setPointsModalCost('');
   }
 
+  function openFidelityAwards(player: Player) {
+    setSelectedPlayerId(String(player.id));
+    setTab('fidelity');
+    loadFidelityAwards(String(player.id));
+  }
+
   return (
     <div className="dashboard">
       <div className="dashboard-greeting">
@@ -257,6 +262,9 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   <button className="admin-points-btn" onClick={() => openPointsModal(player)}>
                     Assegna punti
                   </button>
+                  <button className="admin-fidelity-btn" onClick={() => openFidelityAwards(player)}>
+                    Punti fedeltà
+                  </button>
                 </div>
               </div>
             ))}
@@ -274,23 +282,11 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
             <h3>Elenco punti fedeltà</h3>
             <span className="admin-badge">{sortedFidelityAwards.length}</span>
           </div>
-
-          <div className="admin-form admin-form-inline">
-            <select
-              value={fidelityPlayerId}
-              onChange={(e) => {
-                setFidelityPlayerId(e.target.value);
-                loadFidelityAwards(e.target.value);
-              }}
-            >
-              <option value="">Seleziona player</option>
-              {players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.first_name} {player.last_name} #{player.id}
-                </option>
-              ))}
-            </select>
-          </div>
+          {selectedPlayer && (
+            <div className="admin-highlight">
+              Punti di: {selectedPlayer.first_name} {selectedPlayer.last_name}
+            </div>
+          )}
 
           <div className="admin-list">
             {sortedFidelityAwards.map((item) => (

@@ -558,6 +558,26 @@
   border-color: var(--primary-dark);
 }
 
+.admin-fidelity-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-heading);
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.admin-fidelity-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border-color: var(--primary);
+}
+
 .admin-fidelity-list-item {
   display: flex;
   flex-direction: column;
