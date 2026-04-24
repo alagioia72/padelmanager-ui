@@ -580,8 +580,13 @@
 
 .admin-fidelity-list-item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-fidelity-list-item .admin-item-actions {
+  margin-top: 0;
 }
 
 .admin-list-item strong {

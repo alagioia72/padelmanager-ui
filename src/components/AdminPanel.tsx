@@ -360,9 +360,11 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
           <div className="admin-list">
             {sortedFidelityAwards.map((item) => (
               <div className="admin-list-item admin-fidelity-list-item" key={item.id ?? `${item.player_id}-${item.charge_datetime}`}>
-                <span><strong>Punti: {item.points} · Costo: {item.cost}€</strong></span>
-                <p>Data: {new Date(item.charge_datetime).toLocaleString('it-IT')}</p>
-                <div className="admin-item-actions">
+                <div>
+                  <span><strong>Punti: {item.points} · Costo: {item.cost}€</strong></span>
+                  <p>Data: {new Date(item.charge_datetime).toLocaleString('it-IT')}</p>
+                </div>
+                <div className="admin-item-actions" style={{ marginTop: 0 }}>
                   <button className="btn-secondary" onClick={() => handleEditFidelityAward(item)}>Modifica</button>
                   {item.id && (
                     <button className="btn-outline-danger" onClick={() => confirmDeleteFidelityAward(item.id)}>
