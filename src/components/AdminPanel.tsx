@@ -73,6 +73,10 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     return [...fidelityAwards].sort((a, b) => new Date(b.charge_datetime).getTime() - new Date(a.charge_datetime).getTime());
   }, [fidelityAwards]);
 
+  const totalFidelityPoints = useMemo(() => {
+    return fidelityAwards.reduce((sum, item) => sum + Number(item.points ?? 0), 0);
+  }, [fidelityAwards]);
+
   async function authHeaders() {
     const token = await getAccessToken();
     return {
@@ -212,6 +216,30 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     loadFidelityAwards(String(player.id));
   }
 
+  async function handleDeleteFidelityAward(id: number) {
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/playerfidelityawards/${id}`, { method: 'DELETE', headers });
+      if (!res.ok) throw new Error('Impossibile eliminare il movimento');
+      if (selectedPlayerId) {
+        await loadFidelityAwards(selectedPlayerId);
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Errore eliminazione movimento');
+    }
+  }
+
+  function handleEditFidelityAward(item: PlayerFidelityAward) {
+    setTab('players');
+    const player = players.find((p) => p.id === item.player_id);
+    if (player) {
+      openPointsModal(player);
+      setPointsModalPoints(String(item.points));
+      setPointsModalCost(String(item.cost));
+    }
+  }
+
   return (
     <div className="dashboard">
       <div className="dashboard-greeting">
@@ -279,7 +307,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
       ) : tab === 'fidelity' ? (
         <section className="admin-card">
           <div className="admin-section-header">
-            <h3>Elenco punti fedeltà</h3>
+            <h3>Elenco punti fedeltà · Totale {totalFidelityPoints}</h3>
             <span className="admin-badge">{sortedFidelityAwards.length}</span>
           </div>
           {selectedPlayer && (
@@ -290,10 +318,18 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
 
           <div className="admin-list">
             {sortedFidelityAwards.map((item) => (
-              <div className="admin-list-item" key={item.id ?? `${item.player_id}-${item.charge_datetime}`}>
+              <div className="admin-list-item admin-fidelity-list-item" key={item.id ?? `${item.player_id}-${item.charge_datetime}`}>
                 <strong>Player #{item.player_id}</strong>
                 <span>Punti: {item.points} · Costo: {item.cost}</span>
                 <p>Data: {new Date(item.charge_datetime).toLocaleString('it-IT')}</p>
+                <div className="admin-item-actions">
+                  <button className="btn-secondary" onClick={() => handleEditFidelityAward(item)}>Modifica</button>
+                  {item.id && (
+                    <button className="btn-outline-danger" onClick={() => handleDeleteFidelityAward(item.id)}>
+                      Elimina
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
