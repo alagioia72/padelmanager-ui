@@ -293,9 +293,11 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
         <button className={`admin-tab ${tab === 'players' ? 'active' : ''}`} onClick={() => setTab('players')}>
           Elenco players
         </button>
+        {selectedPlayer &&
         <button className={`admin-tab ${tab === 'fidelity' ? 'active' : ''}`} onClick={() => setTab('fidelity')}>
-          Punti fedeltà {selectedPlayer?.first_name} {selectedPlayer?.last_name}
+          Punti fedeltà {selectedPlayer.first_name} {selectedPlayer.last_name}
         </button>
+        }
         <button className={`admin-tab ${tab === 'awards' ? 'active' : ''}`} onClick={() => setTab('awards')}>
           Premi fedeltà
         </button>
