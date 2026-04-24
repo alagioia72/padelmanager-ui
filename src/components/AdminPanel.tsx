@@ -231,13 +231,19 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   }
 
   function handleEditFidelityAward(item: PlayerFidelityAward) {
-    setTab('players');
     const player = players.find((p) => p.id === item.player_id);
     if (player) {
       openPointsModal(player);
       setPointsModalPoints(String(item.points));
       setPointsModalCost(String(item.cost));
+      setTab('players');
     }
+  }
+
+  function confirmDeleteFidelityAward(id: number) {
+    const confirmed = window.confirm('Vuoi davvero eliminare questo movimento punti?');
+    if (!confirmed) return;
+    handleDeleteFidelityAward(id);
   }
 
   return (
@@ -325,7 +331,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                 <div className="admin-item-actions">
                   <button className="btn-secondary" onClick={() => handleEditFidelityAward(item)}>Modifica</button>
                   {item.id && (
-                    <button className="btn-outline-danger" onClick={() => handleDeleteFidelityAward(item.id)}>
+                    <button className="btn-outline-danger" onClick={() => confirmDeleteFidelityAward(item.id)}>
                       Elimina
                     </button>
                   )}
