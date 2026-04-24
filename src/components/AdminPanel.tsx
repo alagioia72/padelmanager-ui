@@ -18,7 +18,18 @@ type FidelityAward = {
   points: number;
 };
 
-type AdminTab = 'players' | 'awards';
+type PlayerFidelityAward = {
+  id?: number;
+  player_id: number;
+  points: number;
+  cost: number;
+  charge_datetime: string;
+  award_description?: string;
+  player_first_name?: string;
+  player_last_name?: string;
+};
+
+type AdminTab = 'players' | 'awards' | 'fidelity';
 
 type AdminPanelProps = {
   getAccessToken: TokenProvider;
@@ -28,6 +39,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [tab, setTab] = useState<AdminTab>('players');
   const [players, setPlayers] = useState<Player[]>([]);
   const [awards, setAwards] = useState<FidelityAward[]>([]);
+  const [fidelityAwards, setFidelityAwards] = useState<PlayerFidelityAward[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
@@ -57,6 +69,10 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     });
   }, [players, playerSearch]);
 
+  const sortedFidelityAwards = useMemo(() => {
+    return [...fidelityAwards].sort((a, b) => new Date(b.charge_datetime).getTime() - new Date(a.charge_datetime).getTime());
+  }, [fidelityAwards]);
+
   async function authHeaders() {
     const token = await getAccessToken();
     return {
@@ -70,14 +86,17 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      const [playersRes, awardsRes] = await Promise.all([
+      const [playersRes, awardsRes, fidelityRes] = await Promise.all([
         fetch(`${API_BASE}/players`, { headers }),
         fetch(`${API_BASE}/fidelityawards`, { headers }),
+        fetch(`${API_BASE}/playerfidelityawards`, { headers }),
       ]);
       if (!playersRes.ok) throw new Error('Errore caricamento players');
       if (!awardsRes.ok) throw new Error('Errore caricamento fidelity awards');
+      if (!fidelityRes.ok) throw new Error('Errore caricamento movimenti fidelity');
       setPlayers(await playersRes.json());
       setAwards(await awardsRes.json());
+      setFidelityAwards(await fidelityRes.json());
     } catch (e: any) {
       setError(e.message ?? 'Errore sconosciuto');
     } finally {
@@ -185,6 +204,9 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
         <button className={`admin-tab ${tab === 'players' ? 'active' : ''}`} onClick={() => setTab('players')}>
           Elenco players
         </button>
+        <button className={`admin-tab ${tab === 'fidelity' ? 'active' : ''}`} onClick={() => setTab('fidelity')}>
+          Punti fedeltà
+        </button>
         <button className={`admin-tab ${tab === 'awards' ? 'active' : ''}`} onClick={() => setTab('awards')}>
           Premi fedeltà
         </button>
@@ -228,6 +250,25 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
               Player selezionato: {selectedPlayer.first_name} {selectedPlayer.last_name}
             </div>
           )}
+        </section>
+      ) : tab === 'fidelity' ? (
+        <section className="admin-card">
+          <div className="admin-section-header">
+            <h3>Elenco punti fedeltà</h3>
+            <span className="admin-badge">{sortedFidelityAwards.length}</span>
+          </div>
+
+          <div className="admin-list">
+            {sortedFidelityAwards.map((item) => (
+              <div className="admin-list-item" key={item.id ?? `${item.player_id}-${item.charge_datetime}`}>
+                <strong>
+                  {item.player_first_name ?? 'Player'} {item.player_last_name ?? ''}
+                </strong>
+                <span>Punti: {item.points} · Costo: {item.cost}</span>
+                <p>Data: {new Date(item.charge_datetime).toLocaleString('it-IT')}</p>
+              </div>
+            ))}
+          </div>
         </section>
       ) : (
         <section className="admin-card">

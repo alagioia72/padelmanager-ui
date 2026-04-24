@@ -558,6 +558,12 @@
   border-color: var(--primary-dark);
 }
 
+.admin-fidelity-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .admin-list-item strong {
   display: block;
   color: var(--text-heading);
