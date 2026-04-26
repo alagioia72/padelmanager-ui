@@ -1,15 +1,17 @@
 import { useMsal } from '@azure/msal-react';
 import { loginRequest } from './auth/authConfig';
+import { useAuth } from './auth/AuthProvider';
 
 interface SignInProps {
   onSwitchToSignUp: () => void;
 }
 
 export default function SignIn({ onSwitchToSignUp }: SignInProps) {
-  const { instance } = useMsal();
+  const { login } = useAuth();
 
   function handleSignIn() {
-    instance.loginRedirect(loginRequest).catch(console.error);
+    login().catch(console.error);
+    //instance.loginRedirect(loginRequest).catch(console.error);
   }
 
   return (

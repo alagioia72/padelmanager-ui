@@ -1,11 +1,23 @@
 import { useMsal } from '@azure/msal-react';
 
-export default function Dashboard() {
+type DashboardProps = {
+  onFidelityClick?: () => void;
+};
+
+export default function Dashboard({ onFidelityClick }: DashboardProps) {
   const { accounts } = useMsal();
   const account = accounts[0];
   const firstName = account?.name?.split(' ')[0] ?? 'Giocatore';
 
   const cards = [
+{
+      icon: '🎁',
+      color: 'rgba(255,193,7,0.15)',
+      title: 'Punti Fedeltà',
+      desc: 'Visualizza i tuoi punti e richiedi i tuoi premi.',
+      badge: '',
+      onClick: onFidelityClick,
+    },
     {
       icon: '🗓️',
       color: 'rgba(45,114,184,0.12)',
@@ -59,13 +71,13 @@ export default function Dashboard() {
 
       <div className="dashboard-grid">
         {cards.map((card, i) => (
-          <div className="dashboard-card" key={i}>
+          <div className="dashboard-card" key={i} onClick={card.onClick} style={card.onClick ? { cursor: 'pointer' } : {}}>
             <div className="dashboard-card-icon" style={{ background: card.color }}>
               {card.icon}
             </div>
             <h3>{card.title}</h3>
             <p>{card.desc}</p>
-            <span className="badge-soon">coming soon</span>
+            {card.badge && <span className="badge-soon">coming soon</span>}
           </div>
         ))}
       </div>

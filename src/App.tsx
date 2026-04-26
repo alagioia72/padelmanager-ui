@@ -7,12 +7,14 @@ import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import PlayerProfile from './components/PlayerProfile';
 import AdminPanel from './components/AdminPanel';
+import FidelityProgress from './components/FidelityProgress';
 import { useAuth } from './auth/AuthProvider';
 
 function AppContent() {
   const [showProfile, setShowProfile] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [activeSection, setActiveSection] = useState<'dashboard' | 'admin'>('dashboard');
+  const [showFidelity, setShowFidelity] = useState(false);
 
   const { login, logout, roles, isAuthenticated, getAccessToken } = useAuth();
   const isAdmin = roles.includes('admin') || roles.includes('clubmanager');
@@ -67,7 +69,13 @@ function AppContent() {
 
       <div className="page-content">
         <AuthenticatedTemplate>
-          {activeSection === 'admin' && isAdmin ? <AdminPanel getAccessToken={getAccessToken} /> : <Dashboard />}
+          {showFidelity ? (
+            <FidelityProgress getAccessToken={getAccessToken} onBack={() => setShowFidelity(false)} />
+          ) : activeSection === 'admin' && isAdmin ? (
+            <AdminPanel getAccessToken={getAccessToken} />
+          ) : (
+            <Dashboard onFidelityClick={() => setShowFidelity(true)} />
+          )}
           {showProfile && <PlayerProfile onClose={() => setShowProfile(false)} />}
         </AuthenticatedTemplate>
 

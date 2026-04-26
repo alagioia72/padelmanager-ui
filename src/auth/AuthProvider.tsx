@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode}> = ({ children 
 
     // 🔑 login
     const login = async () => {
-        const response = await msalInstance.loginPopup(loginRequest);
+        const response = await msalInstance.loginRedirect(loginRequest);
         handleAuthResponse(response);
     };
 
@@ -113,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode}> = ({ children 
                 isAuthenticated,
                 login,
                 logout,
-                getAccessToken,
+                getAccessToken
             }}
         >
             {children}

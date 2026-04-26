@@ -13,6 +13,8 @@ import { MsalProvider } from '@azure/msal-react';
  */
 //const msalInstance = new PublicClientApplication(msalConfig);
 async function bootstrap() {
+  const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+
   try {
     console.log("MSAL instance created:", msalConfig);
 
@@ -31,13 +33,41 @@ async function bootstrap() {
     msalInstance.setActiveAccount(msalInstance.getActiveAccount()[0]);
   }
 
+  const decodeToken = (token: string) => {
+    const payload = token.split('.')[1];
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const json = atob(base64);
+    return JSON.parse(json);
+  }
+
+  const createPlayerIfNotExists = async (accessToken: string) => {
+    const claims = decodeToken(accessToken);;
+    const data = {
+      first_name: claims.given_name,
+      last_name: claims.family_name,
+      entra_id: claims.oid,
+    };
+
+    const res = await fetch(`${API_BASE}/players`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(data),
+    });
+
+    if (res.status !== 409 && !res.ok) { // 409 = Conflict (utente già esistente)
+      const errorText = await res.text();
+      console.log(`Error in user creation ${res.status}: ${errorText}`);
+    }
+  };
+
   // Listen for sign-in event and set active account
   msalInstance.addEventCallback((event) => {
     if (event.eventType === EventType.ACQUIRE_TOKEN_SUCCESS && event.payload) {
       const payload = event.payload as AuthenticationResult;
       const account = payload.account;
-      console.log(payload.idToken);
+      console.log(payload.accessToken);
       msalInstance.setActiveAccount(account);
+      createPlayerIfNotExists(payload.accessToken).catch(console.error);
     }
   });
 
