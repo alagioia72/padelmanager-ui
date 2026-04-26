@@ -236,9 +236,12 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
 
   function openPointsModal(player: Player) {
     setPointsModalPlayer(player);
-    setPointsModalAward(null);
-    //setPointsModalPoints('');
-    //setPointsModalCost('');
+    setPointsModalAward({
+      player_id: player.id,
+      points: null,
+      cost: null,
+      charge_datetime: new Date().toISOString(),
+    });
   }
 
   function openFidelityAwards(player: Player) {
@@ -440,22 +443,26 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                 </div>
               </div>
               <div className="admin-form admin-form-inline">
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Punti"
-                  value={pointsModalAward.points}
-                  //onChange={(e) => setPointsModalPoints(e.target.value)}
-                  onChange={(e) => setPointsModalAward({ ...pointsModalAward, points: Number(e.target.value) })}
-                />
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Costo"
-                  value={pointsModalAward.cost}
-                  //onChange={(e) => setPointsModalCost(e.target.value)}
-                  onChange={(e) => setPointsModalAward({ ...pointsModalAward, cost: Number(e.target.value) })}
-                />
+                <div className="admin-input-group">
+                  <label className="admin-input-label">Punti da assegnare</label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="0"
+                    value={pointsModalAward.points}
+                    onChange={(e) => setPointsModalAward({ ...pointsModalAward, points: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="admin-input-group">
+                  <label className="admin-input-label">Costo in €</label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="0"
+                    value={pointsModalAward.cost}
+                    onChange={(e) => setPointsModalAward({ ...pointsModalAward, cost: Number(e.target.value) })}
+                  />
+                </div>
               </div>
             </div>
             <div className="profile-modal-footer">

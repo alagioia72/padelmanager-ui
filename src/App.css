@@ -484,6 +484,31 @@
   max-width: 560px;
 }
 
+.admin-input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-input-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-input-group input {
+  width: 100%;
+}
+
+.admin-form-inline {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .admin-form input,
 .admin-form select,
 .admin-form textarea {
