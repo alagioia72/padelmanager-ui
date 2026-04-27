@@ -1145,3 +1145,81 @@
   font-weight: 600;
   font-size: 12px;
 }
+
+.fidelity-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fidelity-tab {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-light);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fidelity-tab:hover {
+  color: var(--text);
+}
+
+.fidelity-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.fidelity-history-section {
+  padding: 16px 0;
+}
+
+.fidelity-history-section h3 {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: var(--text-heading);
+}
+
+.fidelity-empty {
+  color: var(--text-light);
+  font-size: 14px;
+  text-align: center;
+  padding: 24px;
+}
+
+.fidelity-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fidelity-history-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.fidelity-history-date {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+.fidelity-history-points {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-right: 12px;
+}
+
+.fidelity-history-description {
+  font-size: 13px;
+  color: var(--text);
+}

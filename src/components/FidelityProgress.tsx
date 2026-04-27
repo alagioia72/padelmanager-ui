@@ -31,6 +31,7 @@ export default function FidelityProgress({ getAccessToken, onBack }: FidelityPro
   const [playerAwards, setPlayerAwards] = useState<PlayerFidelityAward[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<'progress' | 'history'>('progress');
 
   const totalPoints = useMemo(
     () => playerAwards.reduce((sum, item) => sum + Number(item.points ?? 0), 0),
@@ -105,69 +106,115 @@ export default function FidelityProgress({ getAccessToken, onBack }: FidelityPro
       {error && <div className="admin-alert">{error}</div>}
       {loading && <div className="admin-alert">Caricamento in corso...</div>}
 
-      <section className="fidelity-hero">
-        <div className="fidelity-hero-icon">🎁</div>
-        <div className="fidelity-hero-info">
-          <div className="fidelity-hero-points">{totalPoints}</div>
-          <div className="fidelity-hero-label">punti accumulati</div>
-        </div>
-      </section>
+      <div className="fidelity-tabs">
+        <button
+          className={`fidelity-tab ${activeTab === 'progress' ? 'active' : ''}`}
+          onClick={() => setActiveTab('progress')}
+        >
+          Progresso
+        </button>
+        <button
+          className={`fidelity-tab ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          Storico punti
+        </button>
+      </div>
 
-      {!loading && !error && (
+      {activeTab === 'progress' && (
         <>
-          {nextAward ? (
-            <section className="fidelity-progress-section">
-              <h3>Prossimo premio</h3>
-              <div className="fidelity-milestone-card">
-                <div className="fidelity-milestone-header">
-                  <span className="fidelity-milestone-award">{nextAward.description}</span>
-                  <span className="fidelity-milestone-target">{nextAward.points} punti</span>
-                </div>
-                <div className="fidelity-progress-bar">
-                  <div className="fidelity-progress-fill" style={{ width: `${progressPercent}%` }} />
-                </div>
-                <div className="fidelity-progress-info">
-                  <span>{progressPercent.toFixed(0)}%</span>
-                  <span>{pointsToNext} punti mancanti</span>
-                </div>
-              </div>
-            </section>
-          ) : (
-            <section className="fidelity-progress-section">
-              <h3>Tutti i premi ritirati!</h3>
-              <div className="fidelity-all-done">
-                <span>🎉</span>
-                <p>Hai raggiunto tutti i premi disponibili. Contatta il club per nuove ricompense!</p>
-              </div>
-            </section>
-          )}
-
-          <section className="fidelity-awards-section">
-            <h3>I tuoi premi</h3>
-            <div className="fidelity-timeline">
-              {sortedAwards.map((award) => {
-                const isAchieved = totalPoints >= award.points;
-                return (
-                  <div key={award.id} className={`fidelity-timeline-item ${isAchieved ? 'achieved' : ''}`}>
-                    <div className="fidelity-timeline-marker">
-                      {isAchieved ? award.points : award.points}
-                    </div>
-                    <div className="fidelity-timeline-content">
-                      <div className="fidelity-timeline-award">{award.description}</div>
-                      <div className="fidelity-timeline-points">
-                        {isAchieved ? (
-                          <span className="fidelity-claim-msg">Complimenti! Passa a ritirare il tuo premio!</span>
-                        ) : (
-                          <span>{totalPoints} / {award.points} punti</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+          <section className="fidelity-hero">
+            <div className="fidelity-hero-icon">🎁</div>
+            <div className="fidelity-hero-info">
+              <div className="fidelity-hero-points">{totalPoints}</div>
+              <div className="fidelity-hero-label">punti accumulati</div>
             </div>
           </section>
+
+          {!loading && !error && (
+            <>
+              {nextAward ? (
+                <section className="fidelity-progress-section">
+                  <h3>Prossimo premio</h3>
+                  <div className="fidelity-milestone-card">
+                    <div className="fidelity-milestone-header">
+                      <span className="fidelity-milestone-award">{nextAward.description}</span>
+                      <span className="fidelity-milestone-target">{nextAward.points} punti</span>
+                    </div>
+                    <div className="fidelity-progress-bar">
+                      <div className="fidelity-progress-fill" style={{ width: `${progressPercent}%` }} />
+                    </div>
+                    <div className="fidelity-progress-info">
+                      <span>{progressPercent.toFixed(0)}%</span>
+                      <span>{pointsToNext} punti mancanti</span>
+                    </div>
+                  </div>
+                </section>
+              ) : (
+                <section className="fidelity-progress-section">
+                  <h3>Tutti i premi ritirati!</h3>
+                  <div className="fidelity-all-done">
+                    <span>🎉</span>
+                    <p>Hai raggiunto tutti i premi disponibili. Contatta il club per nuove ricompense!</p>
+                  </div>
+                </section>
+              )}
+
+              <section className="fidelity-awards-section">
+                <h3>I tuoi premi</h3>
+                <div className="fidelity-timeline">
+                  {sortedAwards.map((award) => {
+                    const isAchieved = totalPoints >= award.points;
+                    return (
+                      <div key={award.id} className={`fidelity-timeline-item ${isAchieved ? 'achieved' : ''}`}>
+                        <div className="fidelity-timeline-marker">
+                          {isAchieved ? award.points : award.points}
+                        </div>
+                        <div className="fidelity-timeline-content">
+                          <div className="fidelity-timeline-award">{award.description}</div>
+                          <div className="fidelity-timeline-points">
+                            {isAchieved ? (
+                              <span className="fidelity-claim-msg">Complimenti! Passa a ritirare il tuo premio!</span>
+                            ) : (
+                              <span>{totalPoints} / {award.points} punti</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            </>
+          )}
         </>
+      )}
+
+      {activeTab === 'history' && (
+        <section className="fidelity-history-section">
+          <h3>Movimenti</h3>
+          {playerAwards.length === 0 ? (
+            <p className="fidelity-empty">Nessun punto accumulato ancora.</p>
+          ) : (
+            <div className="fidelity-history-list">
+              {[...playerAwards]
+                .sort((a, b) => new Date(b.charge_datetime).getTime() - new Date(a.charge_datetime).getTime())
+                .map((award) => (
+                  <div key={award.id} className="fidelity-history-item">
+                    <div className="fidelity-history-date">
+                      {new Date(award.charge_datetime).toLocaleDateString('it-IT', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </div>
+                    <div className="fidelity-history-points">+{award.points}</div>
+                    <div className="fidelity-history-description">Punti fedeltà</div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </section>
       )}
 
       <button className="btn-secondary" onClick={onBack} style={{ marginTop: 24 }}>
