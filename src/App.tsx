@@ -60,12 +60,15 @@ function AppContent() {
 
   return (
     <>
-      <Navbar
-        onProfileClick={() => setShowProfile(true)}
-        isAdmin={isAdmin}
-        activeSection={activeSection}
-        onNavigate={setActiveSection}
-      />
+<Navbar
+          onProfileClick={() => setShowProfile(true)}
+          isAdmin={isAdmin}
+          activeSection={activeSection}
+          onNavigate={(section) => {
+            setShowFidelity(false);
+            setActiveSection(section);
+          }}
+        />
 
       <div className="page-content">
         <AuthenticatedTemplate>
