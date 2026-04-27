@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import VoiceCommandButton from './VoiceCommand/VoiceCommandButton';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
@@ -50,6 +51,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   //const [pointsModalCost, setPointsModalCost] = useState('');
   const [awardForm, setAwardForm] = useState({ id: '', description: '', points: '' });
   const [awardMode, setAwardMode] = useState<'create' | 'edit'>('create');
+  const [voiceError, setVoiceError] = useState('');
 
   const selectedPlayer = useMemo(
     () => players.find((player) => String(player.id) === selectedPlayerId),
@@ -285,11 +287,31 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   return (
     <div className="dashboard">
       <div className="dashboard-greeting">
-        <h2>Area Admin</h2>
-        <p>Gestione utenti, punti fedeltà e premi.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h2>Area Admin</h2>
+            <p>Gestione utenti, punti fedeltà e premi.</p>
+          </div>
+          <VoiceCommandButton
+            players={players}
+            onAddPoints={async (playerId, points, cost) => {
+              await handleAddPoints(playerId, points, cost);
+            }}
+            onShowPoints={(playerId) => {
+              const player = players.find(p => p.id === playerId);
+              if (player) {
+                openFidelityAwards(player);
+              }
+            }}
+            onError={(msg) => setVoiceError(msg)}
+          />
+        </div>
       </div>
 
       {error && <div className="admin-alert">{error}</div>}
+      {voiceError && <div className="admin-alert">{voiceError}
+        <button onClick={() => setVoiceError('')} style={{ marginLeft: '12px', padding: '2px 8px' }}>✕</button>
+      </div>}
       {loading && <div className="admin-alert">Caricamento in corso...</div>}
 
       <div className="admin-tabs">
