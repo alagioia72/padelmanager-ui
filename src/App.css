@@ -564,6 +564,34 @@
   justify-content: flex-end;
 }
 
+/* Mobile responsive: aggressively stack buttons BELOW player info */
+@media (max-width: 768px) {
+  /* Force vertical stacking for ALL admin list items containing players */
+  .admin-list-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  
+  .admin-list-item .admin-player-main {
+    width: 100% !important;
+    flex: none !important;
+  }
+  
+  .admin-list-item .admin-player-actions {
+    width:100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: stretch !important;
+    margin-top: 12px !important;
+  }
+  
+  .admin-list-item .admin-player-actions button {
+    flex: 1 !important;
+    min-width: 45% !important;
+  }
+}
+
 .admin-points-btn {
   display: inline-flex;
   align-items: center;
@@ -955,12 +983,14 @@
   }
 
   .dashboard {
-    padding: 24px 16px;
+    padding: 80px 16px 24px;
   }
 
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
+
+  
 }
 
 .fidelity-hero {

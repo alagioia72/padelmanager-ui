@@ -41,6 +41,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [awards, setAwards] = useState<FidelityAward[]>([]);
   const [fidelityAwards, setFidelityAwards] = useState<PlayerFidelityAward[]>([]);
+  const [playerPointsMap, setPlayerPointsMap] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
@@ -93,14 +94,28 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      const [playersRes, awardsRes] = await Promise.all([
+      const [playersRes, awardsRes, allFidelityRes] = await Promise.all([
         fetch(`${API_BASE}/players`, { headers }),
         fetch(`${API_BASE}/fidelityawards`, { headers }),
+        fetch(`${API_BASE}/playerfidelityawards`, { headers }),
       ]);
       if (!playersRes.ok) throw new Error('Errore caricamento players');
       if (!awardsRes.ok) throw new Error('Errore caricamento fidelity awards');
       setPlayers(await playersRes.json());
       setAwards(await awardsRes.json());
+      
+      // Load all player fidelity awards and calculate points per player
+      if (allFidelityRes.ok) {
+        const allAwards: PlayerFidelityAward[] = await allFidelityRes.json();
+        
+        // Calculate total points per player
+        const pointsMap = new Map<number, number>();
+        allAwards.forEach((award: PlayerFidelityAward) => {
+          const currentPoints = pointsMap.get(award.player_id) || 0;
+          pointsMap.set(award.player_id, currentPoints + Number(award.points ?? 0));
+        });
+        setPlayerPointsMap(pointsMap);
+      }
     } catch (e: any) {
       setError(e.message ?? 'Errore sconosciuto');
     } finally {
@@ -344,10 +359,12 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
           </div>
 
           <div className="admin-list admin-players-list">
-            {filteredPlayers.map((player) => (
+            {filteredPlayers.map((player) => {
+              const playerPoints = playerPointsMap.get(player.id) || 0;
+              return (
               <div className="admin-list-item admin-player-row" key={player.id}>
                 <div className="admin-player-main">
-                  <strong>{player.first_name} {player.last_name}</strong>
+                  <strong>{player.first_name} {player.last_name} - {playerPoints} punti</strong>
                   <span>#{player.id} · Genere: {player.gender}</span>
                   <p>Entra ID: {player.entra_id}</p>
                 </div>
@@ -361,7 +378,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   </button>
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
 
           {selectedPlayer && (
@@ -369,6 +387,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
               Player selezionato: {selectedPlayer.first_name} {selectedPlayer.last_name}
             </div>
           )}
+
+          
         </section>
       ) : tab === 'fidelity' ? (
         <section className="admin-card">
@@ -400,6 +420,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
               </div>
             ))}
           </div>
+
+          
         </section>
       ) : (
         <section className="admin-card">
@@ -445,6 +467,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
               </div>
             ))}
           </div>
+
+          
         </section>
       )}
 
@@ -498,7 +522,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   Salva modifiche
                 </button>
               )}
-              <button className="btn-secondary" onClick={() => setPointsModalPlayer(null)}>
+<button className="btn-secondary" onClick={() => setPointsModalPlayer(null)}>
                 Annulla
               </button>
             </div>
