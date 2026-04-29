@@ -14,7 +14,7 @@ export const msalConfig = {
     auth: {
         clientId: import.meta.env.VITE_AUTH_CLIENT_ID, // This is the ONLY mandatory field that you need to supply.
         authority: import.meta.env.VITE_AUTHORITY_URI, // Replace the placeholder with your tenant subdomain 
-        redirectUri: import.meta.env.VITE_AUTH_REDIRECT_URI, // Points to window.location.origin. You must register this URI on Microsoft Entra admin center/App Registration.
+        redirectUri: window.location.origin + '/redirect',// import.meta.env.VITE_AUTH_REDIRECT_URI, // Points to window.location.origin. You must register this URI on Microsoft Entra admin center/App Registration.
         postLogoutRedirectUri: '/', // Indicates the page to navigate after logout.
         navigateToLoginRequestUrl: false, // If "true", will navigate back to the original request location before processing the auth code response.
     },
