@@ -28,6 +28,11 @@ type PlayerFidelityAward = {
   award_description?: string;
   player_first_name?: string;
   player_last_name?: string;
+  player_charge?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
 };
 
 type AdminTab = 'players' | 'awards' | 'fidelity';
@@ -132,7 +137,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/playerfidelityawards/player/${playerId}`, { headers });
+      const res = await fetch(`${API_BASE}/playerfidelityawards/player/${playerId}?include=player_charge`, { headers });
       if (!res.ok) throw new Error('Errore caricamento movimenti fidelity');
       setFidelityAwards(await res.json());
     } catch (e: any) {
@@ -408,6 +413,11 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                 <div>
                   <span><strong>Punti: {item.points} · Costo: {item.cost}€</strong></span>
                   <p>Data: {new Date(item.charge_datetime).toLocaleString('it-IT')}</p>
+                  {item.player_charge && (
+                    <p style={{ fontSize: '0.9em', color: '#666' }}>
+                      Assegnato da: {item.player_charge.first_name} {item.player_charge.last_name}
+                    </p>
+                  )}
                 </div>
                 <div className="admin-item-actions" style={{ marginTop: 0 }}>
                   <button className="btn-secondary" onClick={() => handleEditFidelityAward(item)}>Modifica</button>
