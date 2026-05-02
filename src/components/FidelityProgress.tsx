@@ -24,6 +24,7 @@ type FidelityProgressProps = {
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+const awardType = 'fidelity';
 
 export default function FidelityProgress({ getAccessToken, onBack }: FidelityProgressProps) {
   const { account } = useAuth();
@@ -62,7 +63,7 @@ export default function FidelityProgress({ getAccessToken, onBack }: FidelityPro
         if (!awardsRes.ok) throw new Error('Errore caricamento premi');
         const awardsData = await awardsRes.json();
         setAwards(awardsData);
-        const awardsListRes = await fetch(`${API_BASE}/playerfidelityawards/my/awards`, { headers });
+        const awardsListRes = await fetch(`${API_BASE}/playerawards/${awardType}/my/awards`, { headers });
         if (!awardsListRes.ok) throw new Error('Errore caricamento punti');
         setPlayerAwards(await awardsListRes.json());
       } catch (e: any) {

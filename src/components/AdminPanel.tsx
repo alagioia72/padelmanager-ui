@@ -102,7 +102,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
       const [playersRes, awardsRes, allFidelityRes] = await Promise.all([
         fetch(`${API_BASE}/players`, { headers }),
         fetch(`${API_BASE}/fidelityawards`, { headers }),
-        fetch(`${API_BASE}/playerfidelityawards`, { headers }),
+        fetch(`${API_BASE}/playerawards/fidelity/all`, { headers }),
       ]);
       if (!playersRes.ok) throw new Error('Errore caricamento players');
       if (!awardsRes.ok) throw new Error('Errore caricamento fidelity awards');
@@ -137,7 +137,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/playerfidelityawards/player/${playerId}?include=player_charge`, { headers });
+      const res = await fetch(`${API_BASE}/playerawards/fidelity/player/${playerId}?include=player_charge`, { headers });
       if (!res.ok) throw new Error('Errore caricamento movimenti fidelity');
       setFidelityAwards(await res.json());
     } catch (e: any) {
@@ -159,7 +159,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/playerfidelityawards`, {
+      const res = await fetch(`${API_BASE}/playerawards`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -185,7 +185,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/playerfidelityawards/${itemId}`, {
+      const res = await fetch(`${API_BASE}/playerawards/${itemId}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify({
@@ -276,7 +276,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setError('');
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/playerfidelityawards/${id}`, { method: 'DELETE', headers });
+      const res = await fetch(`${API_BASE}/playerawards/${id}`, { method: 'DELETE', headers });
       if (!res.ok) throw new Error('Impossibile eliminare il movimento');
       if (selectedPlayerId) {
         await loadFidelityAwards(selectedPlayerId);
