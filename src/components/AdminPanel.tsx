@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useMsal } from '@azure/msal-react';
 import VoiceCommandButton from './VoiceCommand/VoiceCommandButton';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
@@ -58,6 +59,17 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [awardForm, setAwardForm] = useState({ id: '', description: '', points: '' });
   const [awardMode, setAwardMode] = useState<'create' | 'edit'>('create');
   const [voiceError, setVoiceError] = useState('');
+
+  // Get the current admin's account from MSAL
+  const { accounts } = useMsal();
+  const adminEntraId = accounts[0]?.localAccountId;
+
+  // Find the admin's internal player_id by matching entra_id
+  const adminPlayerId = useMemo(() => {
+    if (!adminEntraId) return undefined;
+    const admin = players.find((p) => p.entra_id === adminEntraId);
+    return admin?.id;
+  }, [players, adminEntraId]);
 
   const selectedPlayer = useMemo(
     () => players.find((player) => String(player.id) === selectedPlayerId),
@@ -155,19 +167,24 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     const targetPlayerId = playerId ? String(playerId) : selectedPlayerId;
     const targetPoints = pointsValue ?? pointsModalAward?.points;
     const targetCost = costValue ?? pointsModalAward?.cost;
-    if (!targetPlayerId || !targetPoints || !targetCost) return;
+    if (!targetPlayerId || targetPoints === undefined || targetCost === undefined) return;
     setError('');
     try {
       const headers = await authHeaders();
+      const body: any = {
+        player_id: Number(targetPlayerId),
+        points: Number(targetPoints),
+        charge_datetime: new Date().toISOString(),
+        cost: Number(targetCost),
+        award_type_id: 1, // Assuming 1 is the ID for "fidelity" type awards
+      };
+      if (adminPlayerId) {
+        body.player_id_charge = adminPlayerId;
+      }
       const res = await fetch(`${API_BASE}/playerawards`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          player_id: Number(targetPlayerId),
-          points: Number(targetPoints),
-          charge_datetime: new Date().toISOString(),
-          cost: Number(targetCost),
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('Impossibile assegnare i punti');
       setPointsModalPlayer(null);
@@ -181,19 +198,23 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   }
 
   async function handleUpdateFidelityAward(playerId: number, pointsValue: number, costValue: number, itemId: number) {
-    if (!pointsValue || !costValue) return;
+    if (!playerId || pointsValue === undefined || costValue === undefined) return;
     setError('');
     try {
       const headers = await authHeaders();
+      const body: any = {
+        player_id: playerId,
+        points: Number(pointsValue),
+        charge_datetime: new Date().toISOString(),
+        cost: Number(costValue),
+      };
+      if (adminPlayerId) {
+        body.player_id_charge = adminPlayerId;
+      }
       const res = await fetch(`${API_BASE}/playerawards/${itemId}`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify({
-          player_id: playerId,
-          points: Number(pointsValue),
-          charge_datetime: new Date().toISOString(),
-          cost: Number(costValue),
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('Impossibile modificare i punti');
       setPointsModalPlayer(null);
