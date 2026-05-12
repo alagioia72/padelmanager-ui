@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard';
 import PlayerProfile from './components/PlayerProfile';
 import AdminPanel from './components/AdminPanel';
 import FidelityProgress from './components/FidelityProgress';
+import WalletProgress from './components/WalletProgress';
 import { useAuth } from './auth/AuthProvider';
 
 function AppContent() {
@@ -15,6 +16,7 @@ function AppContent() {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [activeSection, setActiveSection] = useState<'dashboard' | 'admin'>('dashboard');
   const [showFidelity, setShowFidelity] = useState(false);
+  const [showWallet, setShowWallet] = useState(false);
 
   const { login, logout, roles, isAuthenticated, getAccessToken } = useAuth();
   const isAdmin = roles.includes('admin') || roles.includes('clubmanager');
@@ -66,6 +68,7 @@ function AppContent() {
           activeSection={activeSection}
           onNavigate={(section) => {
             setShowFidelity(false);
+            setShowWallet(false);
             setActiveSection(section);
           }}
         />
@@ -74,10 +77,12 @@ function AppContent() {
         <AuthenticatedTemplate>
           {showFidelity ? (
             <FidelityProgress getAccessToken={getAccessToken} onBack={() => setShowFidelity(false)} />
+          ) : showWallet ? (
+            <WalletProgress getAccessToken={getAccessToken} onBack={() => setShowWallet(false)} />
           ) : activeSection === 'admin' && isAdmin ? (
             <AdminPanel getAccessToken={getAccessToken} />
           ) : (
-            <Dashboard onFidelityClick={() => setShowFidelity(true)} />
+            <Dashboard onFidelityClick={() => setShowFidelity(true)} onWalletClick={() => setShowWallet(true)} />
           )}
           {showProfile && <PlayerProfile onClose={() => setShowProfile(false)} />}
         </AuthenticatedTemplate>

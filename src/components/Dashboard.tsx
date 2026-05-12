@@ -2,9 +2,10 @@ import { useMsal } from '@azure/msal-react';
 
 type DashboardProps = {
   onFidelityClick?: () => void;
+  onWalletClick?: () => void;
 };
 
-export default function Dashboard({ onFidelityClick }: DashboardProps) {
+export default function Dashboard({ onFidelityClick, onWalletClick }: DashboardProps) {
   const { accounts } = useMsal();
   const account = accounts[0];
   const firstName = account?.name?.split(' ')[0] ?? 'Giocatore';
@@ -17,6 +18,14 @@ export default function Dashboard({ onFidelityClick }: DashboardProps) {
       desc: 'Visualizza i tuoi punti e richiedi i tuoi premi.',
       badge: '',
       onClick: onFidelityClick,
+    },
+    {
+      icon: '👛',
+      color: 'rgba(76,175,80,0.15)',
+      title: 'Borsellino',
+      desc: 'Visualizza i valori accumulati.',
+      badge: '',
+      onClick: onWalletClick,
     },
     {
       icon: '🗓️',
