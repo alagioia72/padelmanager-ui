@@ -20,11 +20,12 @@ type FidelityAward = {
   points: number;
 };
 
-type PlayerFidelityAward = {
+type PlayerAward = {
   id?: number;
   player_id: number;
   points: number;
   cost: number;
+  type: 'fidelity' | 'wallet';
   charge_datetime: string;
   award_description?: string;
   player_first_name?: string;
@@ -46,14 +47,15 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [tab, setTab] = useState<AdminTab>('players');
   const [players, setPlayers] = useState<Player[]>([]);
   const [awards, setAwards] = useState<FidelityAward[]>([]);
-  const [fidelityAwards, setFidelityAwards] = useState<PlayerFidelityAward[]>([]);
+  const [fidelityAwards, setFidelityAwards] = useState<PlayerAward[]>([]);
   const [playerPointsMap, setPlayerPointsMap] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const [playerSearch, setPlayerSearch] = useState('');
   const [pointsModalPlayer, setPointsModalPlayer] = useState<Player | null>(null);
-  const [pointsModalAward, setPointsModalAward] = useState<PlayerFidelityAward | null>(null);
+  const [pointsModalAward, setPointsModalAward] = useState<PlayerAward | null>(null);
+  const [pointsModalType, setPointsModalType] = useState<'fidelity' | 'wallet'>('fidelity');
   //const [pointsModalPoints, setPointsModalPoints] = useState('');
   //const [pointsModalCost, setPointsModalCost] = useState('');
   const [awardForm, setAwardForm] = useState({ id: '', description: '', points: '' });
@@ -123,11 +125,11 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
       
       // Load all player fidelity awards and calculate points per player
       if (allFidelityRes.ok) {
-        const allAwards: PlayerFidelityAward[] = await allFidelityRes.json();
+        const allAwards: PlayerAward[] = await allFidelityRes.json();
         
         // Calculate total points per player
         const pointsMap = new Map<number, number>();
-        allAwards.forEach((award: PlayerFidelityAward) => {
+        allAwards.forEach((award: PlayerAward) => {
           const currentPoints = pointsMap.get(award.player_id) || 0;
           pointsMap.set(award.player_id, currentPoints + Number(award.points ?? 0));
         });
@@ -163,10 +165,11 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     loadData();
   }, []);
 
-  async function handleAddPoints(playerId?: number, pointsValue?: number, costValue?: number) {
+  async function handleAddPoints(playerId?: number, pointsValue?: number, costValue?: number, awardType?: 'fidelity' | 'wallet') {
     const targetPlayerId = playerId ? String(playerId) : selectedPlayerId;
     const targetPoints = pointsValue ?? pointsModalAward?.points;
     const targetCost = costValue ?? pointsModalAward?.cost;
+    const type = awardType ?? 'fidelity';
     if (!targetPlayerId || targetPoints === undefined || targetCost === undefined) return;
     setError('');
     try {
@@ -176,7 +179,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
         points: Number(targetPoints),
         charge_datetime: new Date().toISOString(),
         cost: Number(targetCost),
-        award_type_id: 1, // Assuming 1 is the ID for "fidelity" type awards
+        award_type_id: type === 'wallet' ? 2 : 1,
       };
       if (adminPlayerId) {
         body.player_id_charge = adminPlayerId;
@@ -277,14 +280,20 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     setAwardForm({ id: String(award.id), description: award.description, points: String(award.points) });
   }
 
-  function openPointsModal(player: Player) {
+  function openPointsModal(player: Player, type: 'fidelity' | 'wallet' = 'fidelity') {
+    setPointsModalType(type);
     setPointsModalPlayer(player);
     setPointsModalAward({
       player_id: player.id,
-      points: null,
-      cost: null,
+      points: 0,
+      cost: 0,
+      type: type,
       charge_datetime: new Date().toISOString(),
     });
+  }
+
+  function openWalletAwards(player: Player) {
+    openPointsModal(player, 'wallet');
   }
 
   function openFidelityAwards(player: Player) {
@@ -307,7 +316,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     }
   }
 
-  function handleEditFidelityAward(item: PlayerFidelityAward) {
+  function handleEditFidelityAward(item: PlayerAward) {
     const player = players.find((p) => p.id === item.player_id);
     if (player) {
       openPointsModal(player);
@@ -395,12 +404,15 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   <p>Entra ID: {player.entra_id}</p>
                 </div>
 
-                <div className="admin-player-actions">
-                  <button className="admin-points-btn" onClick={() => openPointsModal(player)}>
-                    Assegna punti
+                <div className="admin-player-actions admin-player-actions-3">
+                  <button className="admin-action-btn admin-action-points" onClick={() => openPointsModal(player, 'fidelity')} title="Assegna Punti">
+                    <span className="admin-action-icon">🎯</span>
                   </button>
-                  <button className="admin-fidelity-btn" onClick={() => openFidelityAwards(player)}>
-                    Punti fedeltà
+                  <button className="admin-action-btn admin-action-fidelity" onClick={() => openFidelityAwards(player)} title="Punti Fedeltà">
+                    <span className="admin-action-icon">⭐</span>
+                  </button>
+                  <button className="admin-action-btn admin-action-wallet" onClick={() => openWalletAwards(player)} title="Assegna Valori">
+                    <span className="admin-action-icon">👛</span>
                   </button>
                 </div>
               </div>
@@ -504,12 +516,12 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
       )}
 
       {pointsModalPlayer && (
-        <div className="overlay" onClick={() => setPointsModalPlayer(null)}>
+        <div className="overlay" onClick={() => { setPointsModalPlayer(null); setPointsModalType('fidelity'); }}>
           <div className="profile-modal admin-points-modal" onClick={(e) => e.stopPropagation()}>
             <div className="profile-modal-header">
-              <button className="profile-modal-close" onClick={() => setPointsModalPlayer(null)}>✕</button>
+              <button className="profile-modal-close" onClick={() => { setPointsModalPlayer(null); setPointsModalType('fidelity'); }}>✕</button>
               <div className="profile-modal-name">{pointsModalPlayer.first_name} {pointsModalPlayer.last_name}</div>
-              <div className="profile-modal-email">Assegnazione punti fedeltà</div>
+              <div className="profile-modal-email">{pointsModalType === 'wallet' ? 'Assegnazione valori borsellino' : 'Assegnazione punti fedeltà'}</div>
             </div>
             <div className="profile-modal-body">
               <div className="profile-info-row">
@@ -521,13 +533,13 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
               </div>
               <div className="admin-form admin-form-inline">
                 <div className="admin-input-group">
-                  <label className="admin-input-label">Punti da assegnare</label>
+                  <label className="admin-input-label">{pointsModalType === 'fidelity' ? 'Punti fedeltà' : 'Valori '} da assegnare</label>
                   <input
                     type="number"
                     min="1"
                     placeholder="0"
-                    value={pointsModalAward.points}
-                    onChange={(e) => setPointsModalAward({ ...pointsModalAward, points: Number(e.target.value) })}
+                    value={pointsModalAward?.points}
+                    onChange={(e) => setPointsModalAward({ ...pointsModalAward, points: Number(e.target.value)})}
                   />
                 </div>
                 <div className="admin-input-group">
@@ -536,7 +548,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                     type="number"
                     min="1"
                     placeholder="0"
-                    value={pointsModalAward.cost}
+                    value={pointsModalAward?.cost}
                     onChange={(e) => setPointsModalAward({ ...pointsModalAward, cost: Number(e.target.value) })}
                   />
                 </div>
@@ -545,7 +557,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
             <div className="profile-modal-footer">
               {tab === 'players' ? (
                 //<button className="btn-primary" onClick={() => handleAddPoints(pointsModalPlayer.id, pointsModalPoints, pointsModalCost)}>
-                <button className="btn-primary" onClick={() => handleAddPoints(pointsModalPlayer.id, pointsModalAward.points, pointsModalAward.cost)}>
+                <button className="btn-primary" onClick={() => handleAddPoints(pointsModalPlayer.id, pointsModalAward.points, pointsModalAward.cost, pointsModalType)}>
                   Conferma assegnazione
                 </button>
               ) : (
@@ -553,7 +565,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   Salva modifiche
                 </button>
               )}
-<button className="btn-secondary" onClick={() => setPointsModalPlayer(null)}>
+<button className="btn-secondary" onClick={() => { setPointsModalPlayer(null); setPointsModalType('fidelity'); }}>
                 Annulla
               </button>
             </div>

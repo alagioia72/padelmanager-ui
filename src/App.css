@@ -1253,3 +1253,79 @@
   font-size: 13px;
   color: var(--text);
 }
+
+/* Container for 3 action buttons */
+.admin-player-actions-3 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Base action button style */
+.admin-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Assegna Punti - Target/Goal icon style (matches original admin-points-btn) */
+.admin-action-points {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 1px solid var(--primary);
+}
+
+/* Punti Fedeltà - Star style (matches original admin-fidelity-btn) */
+.admin-action-fidelity {
+  background: var(--bg-card);
+  color: var(--text-heading);
+  border: 1px solid var(--border);
+}
+
+/* Assegna Valori - Wallet style (uses points button style) */
+.admin-action-wallet {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 1px solid var(--primary);
+}
+
+/* Icon style */
+.admin-action-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Label style */
+.admin-action-label {
+  font-size: 12px;
+}
+
+/* Responsive: stack buttons on mobile */
+@media (max-width: 600px) {
+  .admin-player-actions-3 {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .admin-action-btn {
+    justify-content: center;
+    padding: 10px 12px;
+  }
+  
+  .admin-action-label {
+    font-size: 13px;
+  }
+}
