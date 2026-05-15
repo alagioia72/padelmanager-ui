@@ -684,7 +684,6 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   <label className="admin-input-label">{pointsModalType === 'fidelity' ? 'Punti fedeltà' : 'Valori '} da assegnare</label>
                   <input
                     type="number"
-                    min="1"
                     placeholder="0"
                     value={pointsModalAward?.points}
                     onChange={(e) => setPointsModalAward({ ...pointsModalAward, points: Number(e.target.value)})}

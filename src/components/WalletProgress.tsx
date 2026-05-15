@@ -9,7 +9,7 @@ type PlayerWalletAward = {
   points: number;
   cost: number;
   charge_datetime: string;
-  award_description?: string;
+  description?: string;
 };
 
 type WalletProgressProps = {
@@ -91,10 +91,11 @@ export default function WalletProgress({ getAccessToken, onBack }: WalletProgres
                       day: '2-digit',
                       month: 'short',
                       year: 'numeric',
-                    })}
+})}
                   </div>
-                  <div className="fidelity-history-points">+{award.points}</div>
-                  <div className="fidelity-history-description">Valore borsellino</div>
+                    <div className="fidelity-history-points">{award.points > 0 && '+'}{award.points}</div>
+                    {award.description && <p style={{ color: '#666' }}>📝 {award.description}</p>}
+                    {/* <div className="fidelity-history-description">Valore borsellino</div> */}
                 </div>
               ))}
           </div>

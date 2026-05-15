@@ -15,7 +15,7 @@ type PlayerFidelityAward = {
   points: number;
   cost: number;
   charge_datetime: string;
-  award_description?: string;
+  description?: string;
 };
 
 type FidelityProgressProps = {
@@ -210,7 +210,8 @@ export default function FidelityProgress({ getAccessToken, onBack }: FidelityPro
                       })}
                     </div>
                     <div className="fidelity-history-points">+{award.points}</div>
-                    <div className="fidelity-history-description">Punti fedeltà</div>
+                    {award.description && <p style={{ color: '#666' }}>📝 {award.description}</p>}
+                    {/* <div className="fidelity-history-description">Punti fedeltà</div> */}
                   </div>
                 ))}
             </div>
