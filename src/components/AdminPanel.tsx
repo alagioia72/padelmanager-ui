@@ -28,6 +28,7 @@ type PlayerAward = {
   type: 'fidelity' | 'wallet';
   charge_datetime: string;
   award_description?: string;
+  description?: string;
   player_first_name?: string;
   player_last_name?: string;
   player_charge?: {
@@ -37,7 +38,7 @@ type PlayerAward = {
   };
 };
 
-type AdminTab = 'players' | 'awards' | 'fidelity';
+type AdminTab = 'players' | 'awards' | 'fidelity' | 'wallet';
 
 type AdminPanelProps = {
   getAccessToken: TokenProvider;
@@ -48,6 +49,8 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [awards, setAwards] = useState<FidelityAward[]>([]);
   const [fidelityAwards, setFidelityAwards] = useState<PlayerAward[]>([]);
+  const [walletAwards, setWalletAwards] = useState<PlayerAward[]>([]);
+  const [selectedWalletPlayerId, setSelectedWalletPlayerId] = useState('');
   const [playerPointsMap, setPlayerPointsMap] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -99,6 +102,14 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
   const totalFidelityPoints = useMemo(() => {
     return fidelityAwards.reduce((sum, item) => sum + Number(item.points ?? 0), 0);
   }, [fidelityAwards]);
+
+  const sortedWalletAwards = useMemo(() => {
+    return [...walletAwards].sort((a, b) => new Date(b.charge_datetime).getTime() - new Date(a.charge_datetime).getTime());
+  }, [walletAwards]);
+
+  const totalWalletValues = useMemo(() => {
+    return walletAwards.reduce((sum, item) => sum + Number(item.points ?? 0), 0);
+  }, [walletAwards]);
 
   async function authHeaders() {
     const token = await getAccessToken();
@@ -161,6 +172,25 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     }
   }
 
+  async function loadWalletAwards(playerId: string) {
+    if (!playerId) {
+      setWalletAwards([]);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/playerawards/wallet/player/${playerId}?include=player_charge`, { headers });
+      if (!res.ok) throw new Error('Errore caricamento movimenti valori');
+      setWalletAwards(await res.json());
+    } catch (e: any) {
+      setError(e.message ?? 'Errore sconosciuto');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadData();
   }, []);
@@ -180,6 +210,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
         charge_datetime: new Date().toISOString(),
         cost: Number(targetCost),
         award_type_id: type === 'wallet' ? 2 : 1,
+        description: pointsModalAward?.description,
       };
       if (adminPlayerId) {
         body.player_id_charge = adminPlayerId;
@@ -210,6 +241,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
         points: Number(pointsValue),
         charge_datetime: new Date().toISOString(),
         cost: Number(costValue),
+        description: pointsModalAward?.description,
       };
       if (adminPlayerId) {
         body.player_id_charge = adminPlayerId;
@@ -229,6 +261,37 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
       }
     } catch (e: any) {
       setError(e.message ?? 'Errore modifica punti');
+    }
+  }
+
+  async function handleUpdateWalletAward(playerId: number, pointsValue: number, costValue: number, itemId: number) {
+    if (!playerId || pointsValue === undefined || costValue === undefined) return;
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const body: any = {
+        player_id: playerId,
+        points: Number(pointsValue),
+        charge_datetime: new Date().toISOString(),
+        cost: Number(costValue),
+        description: pointsModalAward?.description,
+      };
+      if (adminPlayerId) {
+        body.player_id_charge = adminPlayerId;
+      }
+      const res = await fetch(`${API_BASE}/playerawards/${itemId}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error('Impossibile modificare i valori');
+      setPointsModalPlayer(null);
+      setPointsModalAward(null);
+      if (selectedWalletPlayerId) {
+        await loadWalletAwards(selectedWalletPlayerId);
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Errore modifica valori');
     }
   }
 
@@ -302,6 +365,13 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
     loadFidelityAwards(String(player.id));
   }
 
+  function openWalletList(player: Player) {
+    setSelectedWalletPlayerId(String(player.id));
+    setSelectedPlayerId(String(player.id));
+    setTab('wallet');
+    loadWalletAwards(String(player.id));
+  }
+
   async function handleDeleteFidelityAward(id: number) {
     setError('');
     try {
@@ -313,6 +383,36 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
       }
     } catch (e: any) {
       setError(e.message ?? 'Errore eliminazione movimento');
+    }
+  }
+
+  async function handleDeleteWalletAward(id: number) {
+    setError('');
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/playerawards/${id}`, { method: 'DELETE', headers });
+      if (!res.ok) throw new Error('Impossibile eliminare il movimento');
+      if (selectedWalletPlayerId) {
+        await loadWalletAwards(selectedWalletPlayerId);
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Errore eliminazione movimento');
+    }
+  }
+
+  function confirmDeleteWalletAward(id: number) {
+    const confirmed = window.confirm('Vuoi davvero eliminare questo movimento valori?');
+    if (!confirmed) return;
+    handleDeleteWalletAward(id);
+  }
+
+  function handleEditWalletAward(item: PlayerAward) {
+    const player = players.find((p) => p.id === item.player_id);
+    if (player) {
+      openPointsModal(player, 'wallet');
+      setPointsModalAward(item);
+      setSelectedWalletPlayerId(String(item.player_id));
+      setTab('wallet');
     }
   }
 
@@ -373,6 +473,11 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
           Punti fedeltà {selectedPlayer.first_name} {selectedPlayer.last_name}
         </button>
         }
+        {selectedPlayer &&
+        <button className={`admin-tab ${tab === 'wallet' ? 'active' : ''}`} onClick={() => setTab('wallet')}>
+          Valori {selectedPlayer.first_name} {selectedPlayer.last_name}
+        </button>
+        }
         <button className={`admin-tab ${tab === 'awards' ? 'active' : ''}`} onClick={() => setTab('awards')}>
           Premi fedeltà
         </button>
@@ -404,7 +509,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   <p>Entra ID: {player.entra_id}</p>
                 </div>
 
-                <div className="admin-player-actions admin-player-actions-3">
+                <div className="admin-player-actions admin-player-actions-4">
                   <button className="admin-action-btn admin-action-points" onClick={() => openPointsModal(player, 'fidelity')} title="Assegna Punti">
                     <span className="admin-action-icon">🎯</span>
                   </button>
@@ -413,6 +518,9 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   </button>
                   <button className="admin-action-btn admin-action-wallet" onClick={() => openWalletAwards(player)} title="Assegna Valori">
                     <span className="admin-action-icon">👛</span>
+                  </button>
+                  <button className="admin-action-btn admin-action-wallet-list" onClick={() => openWalletList(player)} title="Elenco Valori">
+                    <span className="admin-action-icon">💰</span>
                   </button>
                 </div>
               </div>
@@ -445,6 +553,7 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
               <div className="admin-list-item admin-fidelity-list-item" key={item.id ?? `${item.player_id}-${item.charge_datetime}`}>
                 <div>
                   <span><strong>Punti: {item.points} · Costo: {item.cost}€</strong></span>
+                  {item.description && <p style={{ color: '#666' }}>📝 {item.description}</p>}
                   <p>Data: {new Date(item.charge_datetime).toLocaleString('it-IT')}</p>
                   {item.player_charge && (
                     <p style={{ fontSize: '0.9em', color: '#666' }}>
@@ -456,6 +565,45 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   <button className="btn-secondary" onClick={() => handleEditFidelityAward(item)}>Modifica</button>
                   {item.id && (
                     <button className="btn-outline-danger" onClick={() => confirmDeleteFidelityAward(item.id)}>
+                      Elimina
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          
+        </section>
+      ) : tab === 'wallet' ? (
+        <section className="admin-card">
+          <div className="admin-section-header">
+            <h3>Elenco valori · Totale {totalWalletValues}</h3>
+            <span className="admin-badge">{sortedWalletAwards.length}</span>
+          </div>
+          {selectedPlayer && (
+            <div className="admin-highlight">
+              Valori di: {selectedPlayer.first_name} {selectedPlayer.last_name}
+            </div>
+          )}
+
+          <div className="admin-list">
+            {sortedWalletAwards.map((item) => (
+              <div className="admin-list-item admin-fidelity-list-item" key={item.id ?? `${item.player_id}-${item.charge_datetime}`}>
+                <div>
+                  <span><strong>Valore: {item.points} · Costo: {item.cost}€</strong></span>
+                  {item.description && <p style={{ color: '#666' }}>📝 {item.description}</p>}
+                  <p>Data: {new Date(item.charge_datetime).toLocaleString('it-IT')}</p>
+                  {item.player_charge && (
+                    <p style={{ fontSize: '0.9em', color: '#666' }}>
+                      Assegnato da: {item.player_charge.first_name} {item.player_charge.last_name}
+                    </p>
+                  )}
+                </div>
+                <div className="admin-item-actions" style={{ marginTop: 0 }}>
+                  <button className="btn-secondary" onClick={() => handleEditWalletAward(item)}>Modifica</button>
+                  {item.id && (
+                    <button className="btn-outline-danger" onClick={() => confirmDeleteWalletAward(item.id)}>
                       Elimina
                     </button>
                   )}
@@ -552,6 +700,15 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                     onChange={(e) => setPointsModalAward({ ...pointsModalAward, cost: Number(e.target.value) })}
                   />
                 </div>
+                <div className="admin-input-group">
+                  <label className="admin-input-label">Descrizione (opzionale)</label>
+                  <input
+                    type="text"
+                    placeholder="es. Bonus iscrizione torneo"
+                    value={pointsModalAward?.description ?? ''}
+                    onChange={(e) => setPointsModalAward({ ...pointsModalAward, description: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
             <div className="profile-modal-footer">
@@ -561,7 +718,10 @@ export default function AdminPanel({ getAccessToken }: AdminPanelProps) {
                   Conferma assegnazione
                 </button>
               ) : (
-                <button className="btn-primary" onClick={() => handleUpdateFidelityAward(pointsModalPlayer.id, pointsModalAward.points, pointsModalAward.cost, Number(pointsModalAward.id))}>
+                <button className="btn-primary" onClick={() => pointsModalType === 'wallet'
+                  ? handleUpdateWalletAward(pointsModalPlayer.id, pointsModalAward.points, pointsModalAward.cost, Number(pointsModalAward.id))
+                  : handleUpdateFidelityAward(pointsModalPlayer.id, pointsModalAward.points, pointsModalAward.cost, Number(pointsModalAward.id))
+                }>
                   Salva modifiche
                 </button>
               )}

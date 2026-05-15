@@ -1261,6 +1261,13 @@
   align-items: center;
 }
 
+/* Container for 4 action buttons */
+.admin-player-actions-4 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 /* Base action button style */
 .admin-action-btn {
   display: inline-flex;
@@ -1302,6 +1309,12 @@
   border: 1px solid var(--primary);
 }
 
+/* Elenco Valori - Wallet list style */
+.admin-action-wallet-list {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
 /* Icon style */
 .admin-action-icon {
   font-size: 16px;
@@ -1315,13 +1328,15 @@
 
 /* Responsive: stack buttons on mobile */
 @media (max-width: 600px) {
-  .admin-player-actions-3 {
+  .admin-player-actions-3,
+  .admin-player-actions-4 {
     flex-direction: column;
     align-items: stretch;
   }
   
   .admin-action-btn {
     justify-content: center;
+    align-items: center;
     padding: 10px 12px;
   }
   
