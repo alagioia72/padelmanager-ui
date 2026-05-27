@@ -28,6 +28,14 @@ export default function Dashboard({ onFidelityClick, onWalletClick }: DashboardP
       onClick: onWalletClick,
     },
     {
+      icon: <img src="/wansport.png" alt="Wansport" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />,
+      color: 'white',
+      title: 'Prenotazione Campi',
+      desc: 'Prenota un campo per allenarti con i tuoi amici.',
+      badge: '',
+      onClick: () => window.open('https://wansport.com', '_blank'),
+    },
+    {
       icon: '🗓️',
       color: 'rgba(45,114,184,0.12)',
       title: 'Le mie partite',
@@ -46,13 +54,6 @@ export default function Dashboard({ onFidelityClick, onWalletClick }: DashboardP
       color: 'rgba(26,74,138,0.12)',
       title: 'Classifiche',
       desc: 'Scopri il tuo ranking e quello degli altri giocatori.',
-      badge: 'soon',
-    },
-    {
-      icon: '🎾',
-      color: 'rgba(45,114,184,0.1)',
-      title: 'Prenotazione Campi',
-      desc: 'Prenota un campo per allenarti con i tuoi amici.',
       badge: 'soon',
     },
     {
